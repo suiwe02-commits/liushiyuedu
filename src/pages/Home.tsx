@@ -242,9 +242,9 @@ export default function Home() {
   }
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col md:flex-row md:gap-6">
       {/* 侧边栏 - 文件夹树 */}
-      <div className="w-64 flex-shrink-0">
+      <div className="hidden md:block w-64 flex-shrink-0">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">文件夹</h2>
@@ -291,9 +291,23 @@ export default function Home() {
       </div>
 
       {/* 主内容区 */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
+        {/* 手机端文件夹选择 */}
+        <div className="md:hidden mb-3">
+          <select
+            value={selectedFolder || ''}
+            onChange={(e) => setSelectedFolder(e.target.value ? e.target.value : null)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">全部文章 ({articles.length})</option>
+            {folders.map(folder => (
+              <option key={folder.id} value={folder.id}>{folder.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* 操作栏 */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-2 sm:gap-3 mb-4">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -301,13 +315,14 @@ export default function Home() {
               placeholder="搜索文章..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
           <Button
             variant="outline"
             leftIcon={<Upload size={16} />}
             onClick={() => setShowImportModal(true)}
+            className="hidden sm:flex"
           >
             导入
           </Button>
@@ -315,7 +330,8 @@ export default function Home() {
             leftIcon={<FilePlus size={16} />}
             onClick={() => setShowNewArticleModal(true)}
           >
-            新建文章
+            <span className="hidden sm:inline">新建文章</span>
+            <FilePlus size={16} className="sm:hidden" />
           </Button>
         </div>
 

@@ -296,28 +296,28 @@ export default function Reader() {
               </h1>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2.5 hover:bg-gray-100 rounded-lg"
                 title="减小字号"
               >
                 <ZoomOut size={18} />
               </button>
-              <span className="text-sm text-gray-600 w-12 text-center">{fontSize}px</span>
+              <span className="text-sm text-gray-600 w-12 text-center hidden sm:inline">{fontSize}px</span>
               <button
                 onClick={() => setFontSize(Math.min(24, fontSize + 2))}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2.5 hover:bg-gray-100 rounded-lg"
                 title="增大字号"
               >
                 <ZoomIn size={18} />
               </button>
               
-              <div className="w-px h-6 bg-gray-200 mx-1" />
+              <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
               
               <button
                 onClick={() => isEditMode ? setIsEditMode(false) : setIsEditMode(true)}
-                className={`p-2 rounded-lg transition-colors ${isEditMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+                className={`p-2.5 rounded-lg transition-colors hidden sm:block ${isEditMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
                 title={isEditMode ? '退出编辑' : '编辑文章'}
               >
                 {isEditMode ? <Check size={18} /> : <Edit3 size={18} />}
@@ -325,14 +325,14 @@ export default function Reader() {
               
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2.5 hover:bg-gray-100 rounded-lg hidden sm:block"
               >
                 <Settings size={18} />
               </button>
               
               <a
                 href="/wordbook"
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2.5 hover:bg-gray-100 rounded-lg"
                 title="单词本"
               >
                 <BookMarked size={18} />
@@ -368,6 +368,7 @@ export default function Reader() {
             className="prose prose-lg max-w-none"
             style={{ fontSize: `${fontSize}px`, lineHeight }}
             onMouseUp={handleTextSelect}
+            onTouchEnd={() => setTimeout(handleTextSelect, 150)}
           >
             {paragraphs.map((paragraph, index) => {
               const translation = translations.find(
@@ -491,25 +492,29 @@ function WordTooltip({
   const tooltipRef = useRef<HTMLDivElement>(null)
   
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: Event) => {
       if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
         onClose()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [onClose])
   
   const style = position.x === 0 ? {
     position: 'fixed' as const, top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
   } : {
-    position: 'absolute' as const,
-    left: Math.min(position.x, window.innerWidth - 320),
-    top: position.y,
+    position: 'fixed' as const,
+    left: Math.min(Math.max(position.x, 16), window.innerWidth - 300),
+    top: Math.min(position.y, window.innerHeight - 250),
   }
   
   return (
-    <div ref={tooltipRef} className="annotation-tooltip w-80 bg-white shadow-xl border border-gray-200 rounded-lg p-4 z-50" style={style}>
+    <div ref={tooltipRef} className="annotation-tooltip w-80 max-w-[calc(100vw-2rem)] bg-white shadow-xl border border-gray-200 rounded-lg p-4 z-50" style={style}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <h4 className="text-lg font-semibold text-gray-900">{word}</h4>
