@@ -1,7 +1,5 @@
 import { DictionaryResult } from '@/types'
-
-// MyMemory Translation API - 免费翻译
-const MYMEMORY_API = 'https://api.mymemory.translated.net/get'
+import { translateWord } from './translation'
 
 // 常用单词的中文翻译缓存（提高速度）
 const commonTranslations: Record<string, string[]> = {
@@ -400,36 +398,30 @@ export const lookupWord = async (word: string): Promise<DictionaryResult | null>
 
     // 1. 先查本地缓存
     if (commonTranslations[cleanWord]) {
+      // 每个词性最多3个翻译选项
+      const limitedDefinitions = commonTranslations[cleanWord].slice(0, 3).map(t => ({ definition: t }))
       return {
         word: cleanWord,
         phonetic: '',
         meanings: [{
           partOfSpeech: '常用词',
-          definitions: commonTranslations[cleanWord].map(t => ({ definition: t }))
+          definitions: limitedDefinitions
         }]
       }
     }
 
-    // 2. 使用 MyMemory 翻译 API 获取中文翻译
+    // 2. 使用百度翻译大模型 API 获取中文翻译
     try {
-      const response = await fetch(
-        `${MYMEMORY_API}?q=${encodeURIComponent(cleanWord)}&langpair=en|zh-CN`,
-        { signal: AbortSignal.timeout(3000) }
-      )
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.responseStatus === 200 && data.responseData?.translatedText) {
-          const chineseTranslation = data.responseData.translatedText
-          
-          return {
-            word: cleanWord,
-            phonetic: '',
-            meanings: [{
-              partOfSpeech: '翻译',
-              definitions: [{ definition: chineseTranslation }]
-            }]
-          }
+      const chineseTranslation = await translateWord(cleanWord)
+
+      if (chineseTranslation) {
+        return {
+          word: cleanWord,
+          phonetic: '',
+          meanings: [{
+            partOfSpeech: '翻译',
+            definitions: [{ definition: chineseTranslation }]
+          }]
         }
       }
     } catch (apiError) {

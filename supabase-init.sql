@@ -1,10 +1,45 @@
--- 流式阅读 - Supabase 数据库初始化脚本
+-- 流式阅读 - Supabase 数据库初始化脚本（可重复执行）
 -- 在 Supabase SQL Editor 中执行此脚本
 
 -- ============================================
--- 1. 创建用户档案表 (扩展 auth.users)
+-- 1. 清理已存在的策略和触发器（避免重复执行报错）
 -- ============================================
-CREATE TABLE IF NOT EXISTS profiles (
+DO $$ 
+DECLARE
+  r RECORD;
+BEGIN
+  -- 删除所有自定义策略
+  FOR r IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', r.policyname, r.tablename);
+  END LOOP;
+END $$;
+
+-- 删除已存在的触发器
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS folders_updated_at ON public.folders;
+DROP TRIGGER IF EXISTS articles_updated_at ON public.articles;
+DROP TRIGGER IF EXISTS annotations_updated_at ON public.annotations;
+DROP TRIGGER IF EXISTS wordbook_updated_at ON public.wordbook;
+
+-- 删除已存在的函数
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.update_updated_at();
+
+-- 删除已存在的表（按依赖顺序）
+DROP TABLE IF EXISTS public.api_usage_logs CASCADE;
+DROP TABLE IF EXISTS public.wordbook CASCADE;
+DROP TABLE IF EXISTS public.translations CASCADE;
+DROP TABLE IF EXISTS public.annotations CASCADE;
+DROP TABLE IF EXISTS public.articles CASCADE;
+DROP TABLE IF EXISTS public.folders CASCADE;
+DROP TABLE IF EXISTS public.user_quotas CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TABLE IF EXISTS public.global_config CASCADE;
+
+-- ============================================
+-- 2. 创建用户档案表
+-- ============================================
+CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -12,17 +47,10 @@ CREATE TABLE IF NOT EXISTS profiles (
   is_active BOOLEAN DEFAULT TRUE NOT NULL
 );
 
--- 启用 RLS
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能查看和编辑自己的档案
-CREATE POLICY "Users can view own profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = id);
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- 自动创建档案的触发器
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -39,9 +67,9 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
--- 2. 用户配额表
+-- 3. 用户配额表
 -- ============================================
-CREATE TABLE IF NOT EXISTS user_quotas (
+CREATE TABLE user_quotas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   quota_type TEXT NOT NULL CHECK (quota_type IN ('max_articles', 'daily_api_calls', 'storage_limit_mb')),
@@ -51,18 +79,14 @@ CREATE TABLE IF NOT EXISTS user_quotas (
   UNIQUE(user_id, quota_type)
 );
 
--- 启用 RLS
 ALTER TABLE user_quotas ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的配额
-CREATE POLICY "Users can CRUD own quotas"
-  ON user_quotas FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own quotas" ON user_quotas FOR ALL USING (auth.uid() = user_id);
 
 -- ============================================
--- 3. 文件夹表
+-- 4. 文件夹表
 -- ============================================
-CREATE TABLE IF NOT EXISTS folders (
+CREATE TABLE folders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   parent_id UUID REFERENCES folders(id) ON DELETE CASCADE,
@@ -72,16 +96,11 @@ CREATE TABLE IF NOT EXISTS folders (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 启用 RLS
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的文件夹
-CREATE POLICY "Users can CRUD own folders"
-  ON folders FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own folders" ON folders FOR ALL USING (auth.uid() = user_id);
 
--- 更新时间戳的触发器
-CREATE OR REPLACE FUNCTION update_updated_at()
+CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
@@ -91,12 +110,12 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER folders_updated_at
   BEFORE UPDATE ON folders
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- ============================================
--- 4. 文章表
+-- 5. 文章表
 -- ============================================
-CREATE TABLE IF NOT EXISTS articles (
+CREATE TABLE articles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   folder_id UUID REFERENCES folders(id) ON DELETE SET NULL,
@@ -108,23 +127,18 @@ CREATE TABLE IF NOT EXISTS articles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 启用 RLS
 ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的文章
-CREATE POLICY "Users can CRUD own articles"
-  ON articles FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own articles" ON articles FOR ALL USING (auth.uid() = user_id);
 
--- 更新时间戳的触发器
 CREATE TRIGGER articles_updated_at
   BEFORE UPDATE ON articles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- ============================================
--- 5. 单词标注表
+-- 6. 单词标注表
 -- ============================================
-CREATE TABLE IF NOT EXISTS annotations (
+CREATE TABLE annotations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   article_id UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
@@ -137,23 +151,18 @@ CREATE TABLE IF NOT EXISTS annotations (
   UNIQUE(article_id, word)
 );
 
--- 启用 RLS
 ALTER TABLE annotations ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的标注
-CREATE POLICY "Users can CRUD own annotations"
-  ON annotations FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own annotations" ON annotations FOR ALL USING (auth.uid() = user_id);
 
--- 更新时间戳的触发器
 CREATE TRIGGER annotations_updated_at
   BEFORE UPDATE ON annotations
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- ============================================
--- 6. 段落翻译表
+-- 7. 段落翻译表
 -- ============================================
-CREATE TABLE IF NOT EXISTS translations (
+CREATE TABLE translations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   article_id UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
@@ -164,18 +173,14 @@ CREATE TABLE IF NOT EXISTS translations (
   UNIQUE(article_id, paragraph_index)
 );
 
--- 启用 RLS
 ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的翻译
-CREATE POLICY "Users can CRUD own translations"
-  ON translations FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own translations" ON translations FOR ALL USING (auth.uid() = user_id);
 
 -- ============================================
--- 7. 单词本表
+-- 8. 单词本表
 -- ============================================
-CREATE TABLE IF NOT EXISTS wordbook (
+CREATE TABLE wordbook (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   word TEXT NOT NULL,
@@ -189,23 +194,18 @@ CREATE TABLE IF NOT EXISTS wordbook (
   UNIQUE(user_id, word)
 );
 
--- 启用 RLS
 ALTER TABLE wordbook ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能操作自己的单词本
-CREATE POLICY "Users can CRUD own wordbook"
-  ON wordbook FOR ALL
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can CRUD own wordbook" ON wordbook FOR ALL USING (auth.uid() = user_id);
 
--- 更新时间戳的触发器
 CREATE TRIGGER wordbook_updated_at
   BEFORE UPDATE ON wordbook
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- ============================================
--- 8. API使用日志表
+-- 9. API使用日志表
 -- ============================================
-CREATE TABLE IF NOT EXISTS api_usage_logs (
+CREATE TABLE api_usage_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   api_type TEXT NOT NULL CHECK (api_type IN ('dictionary', 'translation')),
@@ -213,18 +213,14 @@ CREATE TABLE IF NOT EXISTS api_usage_logs (
   used_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 启用 RLS
 ALTER TABLE api_usage_logs ENABLE ROW LEVEL SECURITY;
 
--- 策略：用户只能查看自己的日志
-CREATE POLICY "Users can read own logs"
-  ON api_usage_logs FOR SELECT
-  USING (auth.uid() = user_id);
+CREATE POLICY "Users can read own logs" ON api_usage_logs FOR SELECT USING (auth.uid() = user_id);
 
 -- ============================================
--- 9. 全局配置表
+-- 10. 全局配置表
 -- ============================================
-CREATE TABLE IF NOT EXISTS global_config (
+CREATE TABLE global_config (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   guest_max_articles INTEGER DEFAULT 10,
   guest_daily_api_calls INTEGER DEFAULT 100,
@@ -238,20 +234,14 @@ CREATE TABLE IF NOT EXISTS global_config (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 插入默认配置
 INSERT INTO global_config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
--- 启用 RLS
 ALTER TABLE global_config ENABLE ROW LEVEL SECURITY;
 
--- 策略：认证用户可以读取配置（但不能读取密钥）
-CREATE POLICY "Authenticated users can read config"
-  ON global_config FOR SELECT
-  TO authenticated
-  USING (true);
+CREATE POLICY "Authenticated users can read config" ON global_config FOR SELECT TO authenticated USING (true);
 
 -- ============================================
--- 10. 创建索引以提高查询性能
+-- 11. 创建索引
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
 CREATE INDEX IF NOT EXISTS idx_folders_parent_id ON folders(parent_id);
@@ -266,12 +256,9 @@ CREATE INDEX IF NOT EXISTS idx_api_usage_logs_user_id ON api_usage_logs(user_id)
 CREATE INDEX IF NOT EXISTS idx_api_usage_logs_used_at ON api_usage_logs(used_at);
 
 -- ============================================
--- 完成提示
+-- 完成
 -- ============================================
 DO $$
 BEGIN
   RAISE NOTICE '数据库初始化完成！';
-  RAISE NOTICE '请在 Supabase 项目设置中配置以下环境变量：';
-  RAISE NOTICE '1. VITE_SUPABASE_URL';
-  RAISE NOTICE '2. VITE_SUPABASE_ANON_KEY';
 END $$;

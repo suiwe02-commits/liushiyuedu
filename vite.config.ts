@@ -11,5 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      // 百度翻译大模型API代理
+      '/api/baidu-translate': {
+        target: 'https://fanyi-api.baidu.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/baidu-translate/, '/ait/api/aiTextTranslate'),
+      },
+    },
   },
 })

@@ -36,19 +36,32 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+      // 带超时的注册
+      let data: { user: { id: string; email?: string | null; created_at: string } | null; session: unknown } | null = null
+      let authError: { message: string } | null = null
+
+      const timeoutId = setTimeout(() => {
+        authError = { message: '注册请求超时，请检查网络连接或稍后重试' }
+      }, 15000)
+
+      try {
+        const result = await supabase.auth.signUp({ email, password })
+        clearTimeout(timeoutId)
+        data = result.data
+        authError = result.error
+      } catch (err: unknown) {
+        clearTimeout(timeoutId)
+        authError = { message: err instanceof Error ? err.message : '注册请求失败' }
+      }
 
       if (authError) {
         setError(authError.message)
         return
       }
 
-      if (data.user) {
-        // 注册成功，将本地数据同步到云端
-        await syncLocalDataToCloud(data.user.id)
+      if (data?.user) {
+        // 注册成功，将本地数据同步到云端（不阻塞）
+        syncLocalDataToCloud(data.user.id)
         
         setSuccess(true)
         
@@ -80,48 +93,34 @@ export default function Register() {
       // 获取所有本地数据
       const localData = await localDB.exportAll()
       
-      // 同步到云端
-      if (localData.folders.length > 0) {
-        const foldersToInsert = localData.folders.map(f => ({
-          ...f,
-          user_id: userId,
-        }))
-        await supabase.from('folders').upsert(foldersToInsert)
+      // 带超时的同步函数
+      const syncWithTimeout = async (table: string, data: Record<string, unknown>[]) => {
+        if (data.length === 0) return
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 5000)
+        try {
+          await supabase.from(table).upsert(data)
+        } catch (e: unknown) {
+          if (e instanceof Error && e.name === 'AbortError') {
+            console.warn(`Sync to ${table} timed out`)
+          } else {
+            console.warn(`Sync to ${table} failed:`, e)
+          }
+        } finally {
+          clearTimeout(timeout)
+        }
       }
       
-      if (localData.articles.length > 0) {
-        const articlesToInsert = localData.articles.map(a => ({
-          ...a,
-          user_id: userId,
-        }))
-        await supabase.from('articles').upsert(articlesToInsert)
-      }
+      // 同步到云端（带超时，不阻塞注册流程）
+      await Promise.allSettled([
+        syncWithTimeout('folders', localData.folders.map(f => ({ ...f, user_id: userId }))),
+        syncWithTimeout('articles', localData.articles.map(a => ({ ...a, user_id: userId }))),
+        syncWithTimeout('annotations', localData.annotations.map(a => ({ ...a, user_id: userId }))),
+        syncWithTimeout('translations', localData.translations.map(t => ({ ...t, user_id: userId }))),
+        syncWithTimeout('wordbook', localData.wordbook.map(w => ({ ...w, user_id: userId }))),
+      ])
       
-      if (localData.annotations.length > 0) {
-        const annotationsToInsert = localData.annotations.map(a => ({
-          ...a,
-          user_id: userId,
-        }))
-        await supabase.from('annotations').upsert(annotationsToInsert)
-      }
-      
-      if (localData.translations.length > 0) {
-        const translationsToInsert = localData.translations.map(t => ({
-          ...t,
-          user_id: userId,
-        }))
-        await supabase.from('translations').upsert(translationsToInsert)
-      }
-      
-      if (localData.wordbook.length > 0) {
-        const wordbookToInsert = localData.wordbook.map(w => ({
-          ...w,
-          user_id: userId,
-        }))
-        await supabase.from('wordbook').upsert(wordbookToInsert)
-      }
-      
-      console.log('Local data synced to cloud')
+      console.log('Local data sync attempted')
     } catch (error) {
       console.error('Sync error:', error)
     }

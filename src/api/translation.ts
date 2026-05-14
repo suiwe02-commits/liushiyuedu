@@ -1,18 +1,58 @@
 import { TranslationResult } from '@/types'
 
-// 使用 MyMemory Translation API (免费限制)
-const MYMEMORY_API = 'https://api.mymemory.translated.net/get'
+// 百度翻译大模型API配置
+// 本地开发用 Vite 代理，生产环境用 Vercel API
+const BAIDU_API_URL = import.meta.env.DEV 
+  ? '/api/baidu-translate' 
+  : '/api/translate'
 
 /**
- * 翻译文本
- * @param text 要翻译的文本
- * @param sourceLang 源语言 (默认: auto)
- * @param targetLang 目标语言 (默认: zh-CN)
- * @returns 翻译结果
+ * 调用百度翻译大模型API
+ * 文档：https://fanyi-api.baidu.com/doc/21
+ */
+async function baiduTranslate(text: string, from: string = 'en', to: string = 'zh'): Promise<string | null> {
+  try {
+    const response = await fetch(BAIDU_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        q: text,
+        from,
+        to,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('百度翻译API HTTP错误:', response.status)
+      return null
+    }
+
+    const data = await response.json()
+
+    if (data.error_code) {
+      console.error('百度翻译API错误:', data.error_code, data.error_msg)
+      return null
+    }
+
+    if (data.trans_result && data.trans_result.length > 0) {
+      return data.trans_result.map((item: { dst: string }) => item.dst).join('\n')
+    }
+
+    return null
+  } catch (error) {
+    console.error('百度翻译请求失败:', error)
+    return null
+  }
+}
+
+/**
+ * 翻译文本（百度翻译大模型API）
  */
 export const translateText = async (
   text: string,
-  targetLang: string = 'zh-CN',
+  targetLang: string = 'zh',
   sourceLang: string = 'en'
 ): Promise<TranslationResult | null> => {
   try {
@@ -20,28 +60,16 @@ export const translateText = async (
       return null
     }
 
-    // 使用 MyMemory 免费翻译API
-    const langPair = sourceLang === 'auto' ? 'en' : sourceLang
-    const response = await fetch(
-      `${MYMEMORY_API}?q=${encodeURIComponent(text)}&langpair=${langPair}|${targetLang}`
-    )
+    const translatedText = await baiduTranslate(text, sourceLang, targetLang)
 
-    if (!response.ok) {
-      console.error('Translation API error:', response.status)
-      return null
+    if (translatedText) {
+      return {
+        translatedText,
+        detectedLanguage: sourceLang,
+      }
     }
 
-    const data = await response.json()
-
-    if (data.responseStatus !== 200) {
-      console.error('Translation API error:', data.responseDetails)
-      return null
-    }
-
-    return {
-      translatedText: data.responseData.translatedText,
-      detectedLanguage: langPair === 'auto' ? data.responseData.detectedLanguage : undefined,
-    }
+    return null
   } catch (error) {
     console.error('Error translating text:', error)
     return null
@@ -50,29 +78,32 @@ export const translateText = async (
 
 /**
  * 批量翻译段落
- * @param paragraphs 段落数组
- * @param targetLang 目标语言
- * @returns 翻译结果数组
  */
 export const translateParagraphs = async (
   paragraphs: string[],
-  targetLang: string = 'zh-CN'
+  targetLang: string = 'zh'
 ): Promise<(TranslationResult | null)[]> => {
-  // 逐段翻译，避免请求过大
   const results: (TranslationResult | null)[] = []
-  
+
   for (const paragraph of paragraphs) {
     if (paragraph.trim().length === 0) {
       results.push(null)
       continue
     }
-    
+
     const result = await translateText(paragraph, targetLang)
     results.push(result)
-    
+
     // 添加延迟避免频率限制
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 300))
   }
-  
+
   return results
+}
+
+/**
+ * 查询单词翻译（供词典使用）
+ */
+export const translateWord = async (word: string): Promise<string | null> => {
+  return baiduTranslate(word, 'en', 'zh')
 }
