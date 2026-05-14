@@ -311,7 +311,7 @@ export default function Reader() {
   const paragraphs = article.content.split(/\n/)
 
   return (
-    <div className={`min-h-screen transition-colors ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+    <div className={`min-h-screen transition-colors ${isDarkMode ? 'bg-gray-900 text-gray-300' : 'bg-white text-gray-700'}`}>
       <header className={`sticky top-0 z-30 backdrop-blur border-b transition-colors ${isDarkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'}`}>
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">

@@ -794,20 +794,23 @@ function ArticleItem({
 }) {
   const [showMenu, setShowMenu] = useState(false)
   const navigate = useNavigate()
+  const { isDarkMode } = useThemeStore()
 
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 group transition-colors cursor-pointer rounded-lg"
+      className={`flex items-center gap-4 px-4 py-3 group transition-colors cursor-pointer rounded-lg ${
+        isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'
+      }`}
       onClick={() => navigate(`/reader/${article.id}`)}
       onMouseLeave={() => setShowMenu(false)}
     >
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-gray-900 truncate">{article.title}</h3>
-        <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+        <h3 className={`font-medium truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{article.title}</h3>
+        <div className={`flex items-center gap-4 mt-1 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           <span>{article.word_count} 字</span>
           <span>{new Date(article.updated_at).toLocaleDateString()}</span>
           {article.read_progress > 0 && (
-            <span className="text-cyan-600">{article.read_progress}% 已读</span>
+            <span className={isDarkMode ? 'text-cyan-400' : 'text-cyan-600'}>{article.read_progress}% 已读</span>
           )}
         </div>
       </div>
@@ -818,19 +821,25 @@ function ArticleItem({
             e.stopPropagation()
             setShowMenu(!showMenu)
           }}
-          className="p-1.5 hover:bg-gray-200 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          className={`p-1.5 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity ${
+            isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
+          }`}
         >
-          <MoreVertical size={16} />
+          <MoreVertical size={16} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
+          <div className={`absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-10 min-w-[120px] ${
+            isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+          }`}>
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onEdit(article)
                 setShowMenu(false)
               }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
             >
               <Edit3 size={14} />
               编辑
@@ -841,7 +850,9 @@ function ArticleItem({
                 onMove(article)
                 setShowMenu(false)
               }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+              }`}
             >
               <Move size={14} />
               移动
@@ -852,7 +863,7 @@ function ArticleItem({
                 onDelete(article.id)
                 setShowMenu(false)
               }}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
               <Trash2 size={14} />
               删除

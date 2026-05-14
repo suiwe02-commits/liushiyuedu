@@ -67,21 +67,6 @@ export default function Header() {
               <BookMarked size={18} />
               <span>单词本</span>
             </Link>
-
-            {/* 单词本导出按钮（只在单词本页面显示） */}
-            {isWordbook && entries.length > 0 && (
-              <button
-                onClick={handleExport}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isDarkMode 
-                    ? 'text-gray-300 hover:bg-gray-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">导出</span>
-              </button>
-            )}
             <Link
               to="/settings"
               className={`
