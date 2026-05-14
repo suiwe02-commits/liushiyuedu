@@ -392,17 +392,53 @@ const commonTranslations: Record<string, string[]> = {
  * 查询单词释义（返回中文翻译）
  */
 
-// 运行时内存缓存，避免重复调用API
+// localStorage 缓存键名前缀
+const CACHE_PREFIX = 'dict_'
+// 缓存过期时间：7天
+const CACHE_EXPIRE = 7 * 24 * 60 * 60 * 1000
+// 运行时内存缓存（单次会话内快速访问）
 const apiCache = new Map<string, DictionaryResult>()
+
+/**
+ * 从 localStorage 读取缓存
+ */
+function getCache(word: string): DictionaryResult | null {
+  try {
+    const key = CACHE_PREFIX + word
+    const cached = localStorage.getItem(key)
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached)
+      // 检查是否过期
+      if (Date.now() - timestamp < CACHE_EXPIRE) {
+        return data
+      }
+      // 过期了，删除
+      localStorage.removeItem(key)
+    }
+  } catch {}
+  return null
+}
+
+/**
+ * 写入 localStorage 缓存
+ */
+function setCache(word: string, data: DictionaryResult) {
+  try {
+    const key = CACHE_PREFIX + word
+    localStorage.setItem(key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }))
+  } catch {}
+}
 
 export const lookupWord = async (word: string): Promise<DictionaryResult | null> => {
   try {
     const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
     if (!cleanWord) return null
 
-    // 1. 先查本地缓存
+    // 1. 先查本地缓存（常用词硬编码）
     if (commonTranslations[cleanWord]) {
-      // 每个词性最多3个翻译选项
       const limitedDefinitions = commonTranslations[cleanWord].slice(0, 3).map(t => ({ definition: t }))
       return {
         word: cleanWord,
@@ -414,12 +450,18 @@ export const lookupWord = async (word: string): Promise<DictionaryResult | null>
       }
     }
 
-    // 2. 查运行时缓存
+    // 2. 查 localStorage 持久缓存
+    const cached = getCache(cleanWord)
+    if (cached) {
+      return cached
+    }
+
+    // 3. 查运行时内存缓存
     if (apiCache.has(cleanWord)) {
       return apiCache.get(cleanWord)!
     }
 
-    // 3. 使用百度翻译大模型 API 获取中文翻译
+    // 4. 使用百度翻译 API 获取中文翻译
     try {
       const chineseTranslation = await translateWord(cleanWord)
 
@@ -432,15 +474,16 @@ export const lookupWord = async (word: string): Promise<DictionaryResult | null>
             definitions: [{ definition: chineseTranslation }]
           }]
         }
-        // 缓存API结果
+        // 缓存到内存和 localStorage
         apiCache.set(cleanWord, result)
+        setCache(cleanWord, result)
         return result
       }
     } catch (apiError) {
       console.log('Translation API failed, using fallback')
     }
 
-    // 4. 如果 API 失败，返回单词本身作为备选
+    // 5. 如果 API 失败，返回单词本身作为备选
     return {
       word: cleanWord,
       phonetic: '',

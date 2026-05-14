@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { q, from = 'en', to = 'zh' } = req.body
+  const { q, from = 'en', to = 'zh', model_type = 'nmt' } = req.body
 
   if (!q) {
     return res.status(400).json({ error: 'Missing text to translate' })
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         q,
         from,
         to,
-        model_type: 'llm',
+        model_type, // 可选 'llm' 或 'nmt'
       }),
     })
 
