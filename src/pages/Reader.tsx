@@ -5,7 +5,7 @@ import { useArticleStore } from '@/stores/articleStore'
 import { useAnnotationStore } from '@/stores/annotationStore'
 import { useWordbookStore } from '@/stores/wordbookStore'
 import { localDB } from '@/services/localDB'
-import { lookupWord, getWordAudio } from '@/api/dictionary'
+import { lookupWord } from '@/api/dictionary'
 import { translateText } from '@/api/translation'
 import { Article, Annotation, Translation, WordbookEntry, DictionaryResult } from '@/types'
 import Button from '@/components/common/Button'
@@ -125,17 +125,8 @@ export default function Reader() {
     } else {
       setIsLookingUp(true)
       try {
-        // 并行执行查词和获取发音
-        const [result, audioUrl] = await Promise.all([
-          lookupWord(word),
-          getWordAudio(word)
-        ])
+        const result = await lookupWord(word)
         setWordResult(result)
-        // 翻译显示后再播放发音，不阻塞UI
-        if (audioUrl) {
-          const audio = new Audio(audioUrl)
-          audio.play().catch(() => {})
-        }
       } catch (error) {
         console.error('Lookup error:', error)
         setWordResult(null)
