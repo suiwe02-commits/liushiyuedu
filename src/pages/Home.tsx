@@ -293,19 +293,16 @@ export default function Home() {
 
       {/* 主内容区 */}
       <div className="flex-1 min-w-0">
-        {/* 手机端文件夹选择 */}
-        <div className="md:hidden mb-3">
-          <select
-            value={selectedFolder || ''}
-            onChange={(e) => setSelectedFolder(e.target.value ? e.target.value : null)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          >
-            <option value="">书架 ({articles.length})</option>
-            {folders.map(folder => (
-              <option key={folder.id} value={folder.id}>{folder.name}</option>
-            ))}
-          </select>
-        </div>
+        {/* 手机端：可展开的书架 */}
+        <MobileBookshelf
+          articles={articles}
+          selectedFolder={selectedFolder}
+          onSelectFolder={setSelectedFolder}
+          expandedFolders={expandedFolders}
+          onToggleFolder={toggleFolder}
+          onCreateFolder={() => setShowNewFolderModal(true)}
+          getFolderTree={getFolderTree}
+        />
 
         {/* 搜索栏 */}
         <div className="mb-4">
@@ -534,6 +531,174 @@ export default function Home() {
           </Button>
         </div>
       </Modal>
+    </div>
+  )
+}
+
+// 移动端书架组件
+function MobileBookshelf({
+  articles,
+  selectedFolder,
+  onSelectFolder,
+  expandedFolders,
+  onToggleFolder,
+  onCreateFolder,
+  getFolderTree,
+}: {
+  articles: Article[]
+  selectedFolder: string | null
+  onSelectFolder: (id: string | null) => void
+  expandedFolders: Set<string>
+  onToggleFolder: (id: string) => void
+  onCreateFolder: () => void
+  getFolderTree: (parentId: string | null) => FolderType[]
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="md:hidden mb-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* 书架标题 - 点击展开/折叠 */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center justify-between w-full px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Folder size={18} className="text-cyan-600" />
+          <span className="font-medium text-gray-900">书架</span>
+          <span className="text-xs text-gray-400">({articles.length})</span>
+        </div>
+        {isExpanded ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
+      </button>
+
+      {/* 展开的树状列表 */}
+      {isExpanded && (
+        <div className="border-t border-gray-100">
+          {/* 全部文章 */}
+          <div
+            className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer ${
+              selectedFolder === null ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-50'
+            }`}
+            onClick={() => {
+              onSelectFolder(null)
+              setIsExpanded(false)
+            }}
+          >
+            <Folder size={16} />
+            <span className="text-sm">全部文章</span>
+            <span className="ml-auto text-xs text-gray-400">{articles.length}</span>
+          </div>
+
+          {/* 文件夹树 */}
+          <div className="max-h-64 overflow-y-auto">
+            {getFolderTree(null).map(folder => (
+              <MobileFolderItem
+                key={folder.id}
+                folder={folder}
+                level={0}
+                selectedFolder={selectedFolder}
+                onSelect={(id) => {
+                  onSelectFolder(id)
+                  setIsExpanded(false)
+                }}
+                expandedFolders={expandedFolders}
+                onToggle={onToggleFolder}
+                getFolderTree={getFolderTree}
+                articles={articles}
+              />
+            ))}
+          </div>
+
+          {/* 新增文件夹按钮 */}
+          <button
+            onClick={() => {
+              onCreateFolder()
+              setIsExpanded(false)
+            }}
+            className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 border-t border-gray-100 transition-colors"
+          >
+            <FolderPlus size={16} />
+            <span>新增文件夹</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 移动端文件夹项组件
+function MobileFolderItem({
+  folder,
+  level,
+  selectedFolder,
+  onSelect,
+  expandedFolders,
+  onToggle,
+  getFolderTree,
+  articles,
+}: {
+  folder: FolderType
+  level: number
+  selectedFolder: string | null
+  onSelect: (id: string) => void
+  expandedFolders: Set<string>
+  onToggle: (id: string) => void
+  getFolderTree: (parentId: string | null) => FolderType[]
+  articles: Article[]
+}) {
+  const children = getFolderTree(folder.id)
+  const hasChildren = children.length > 0
+  const articleCount = articles.filter(a => a.folder_id === folder.id).length
+  const isExpanded = expandedFolders.has(folder.id)
+
+  return (
+    <div>
+      <div
+        className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer ${
+          selectedFolder === folder.id ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-50'
+        }`}
+        style={{ paddingLeft: `${level * 16 + 16}px` }}
+      >
+        {hasChildren ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggle(folder.id)
+            }}
+            className="p-0.5 hover:bg-gray-200 rounded"
+          >
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+        ) : (
+          <span className="w-5" />
+        )}
+        <Folder size={16} />
+        <span
+          className="text-sm flex-1 truncate"
+          onClick={() => onSelect(folder.id)}
+        >
+          {folder.name}
+        </span>
+        <span className="text-xs text-gray-400">{articleCount}</span>
+      </div>
+
+      {/* 子文件夹 */}
+      {isExpanded && hasChildren && (
+        <div>
+          {children.map(child => (
+            <MobileFolderItem
+              key={child.id}
+              folder={child}
+              level={level + 1}
+              selectedFolder={selectedFolder}
+              onSelect={onSelect}
+              expandedFolders={expandedFolders}
+              onToggle={onToggle}
+              getFolderTree={getFolderTree}
+              articles={articles}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
