@@ -346,7 +346,7 @@ export default function Reader() {
               
               <button
                 onClick={() => isEditMode ? setIsEditMode(false) : setIsEditMode(true)}
-                className={`p-2.5 rounded-lg transition-colors hidden sm:block ${isEditMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+                className={`p-2.5 rounded-lg transition-colors hidden sm:block ${isEditMode ? 'bg-blue-100 text-cyan-600' : 'hover:bg-gray-100'}`}
                 title={isEditMode ? '退出编辑' : '编辑文章'}
               >
                 {isEditMode ? <Check size={18} /> : <Edit3 size={18} />}
@@ -377,7 +377,7 @@ export default function Reader() {
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full h-[calc(100vh-200px)] px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+              className="w-full h-[calc(100vh-200px)] px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none font-mono text-sm"
               placeholder="编辑文章内容..."
             />
             <div className="flex gap-3">
@@ -424,7 +424,7 @@ export default function Reader() {
                       <button
                         onClick={() => handleTranslate(index, paragraph)}
                         disabled={isTranslating}
-                        className="flex-shrink-0 text-xs text-gray-400 hover:text-blue-600 px-1 -mt-0.5"
+                        className="flex-shrink-0 text-xs text-gray-400 hover:text-cyan-600 px-1 -mt-0.5"
                         title="翻译"
                       >
                         {isTranslating ? <RefreshCw size={10} className="animate-spin" /> : <span>译</span>}
@@ -432,7 +432,7 @@ export default function Reader() {
                     ) : isCollapsed ? (
                       <button
                         onClick={() => handleTranslate(index, paragraph)}
-                        className="flex-shrink-0 text-xs text-blue-600 px-1 -mt-0.5"
+                        className="flex-shrink-0 text-xs text-cyan-600 px-1 -mt-0.5"
                         title="查看翻译"
                       >
                         <span>译</span>
@@ -440,7 +440,7 @@ export default function Reader() {
                     ) : (
                       <button
                         onClick={() => handleTranslate(index, paragraph)}
-                        className="flex-shrink-0 text-xs text-blue-600 font-medium px-1 -mt-0.5"
+                        className="flex-shrink-0 text-xs text-cyan-600 font-medium px-1 -mt-0.5"
                         title="收起翻译"
                       >
                         <span>译</span>
@@ -450,9 +450,9 @@ export default function Reader() {
                   
                   {/* 翻译内容 */}
                   {showTranslation && translation && (
-                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-cyan-400">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-blue-600">中文翻译</span>
+                        <span className="text-xs font-medium text-cyan-600">中文翻译</span>
                         <button
                           onClick={() => handleTranslate(index, paragraph)}
                           className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
@@ -563,9 +563,9 @@ function WordTooltip({
       ) : existingAnnotation ? (
         // 已标注单词 - 显示"学会了"选项
         <div className="space-y-3">
-          <div className="p-3 bg-blue-50 rounded-lg">
+          <div className="p-3 bg-cyan-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">当前释义</p>
-            <p className="text-blue-600 font-medium">{existingAnnotation.translation}</p>
+            <p className="text-cyan-600 font-medium">{existingAnnotation.translation}</p>
           </div>
           <button
             onClick={onMastered}
@@ -580,11 +580,11 @@ function WordTooltip({
         <div className="space-y-3">
           {result.meanings.map((meaning, i) => (
             <div key={i}>
-              <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded mb-1">{meaning.partOfSpeech}</span>
+              <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-cyan-700 rounded mb-1">{meaning.partOfSpeech}</span>
               <ul className="space-y-1">
                 {meaning.definitions.slice(0, 3).map((def, j) => (
                   <li key={j} onClick={() => onSelect(def.definition, result.phonetic || '')}
-                    className="text-sm text-gray-700 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                    className="text-sm text-gray-700 cursor-pointer hover:bg-cyan-50 px-2 py-1 rounded">
                     {def.definition}
                   </li>
                 ))}
@@ -643,7 +643,7 @@ function renderParagraphWithHighlights(
       <span key={`${h.word}-${i}`} className="annotated-word cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onWordClick(h.word, h.annotation) }}>
         {paragraph.slice(h.start, h.end)}
-        <span className="text-blue-400 text-sm">({h.translation})</span>
+        <span className="text-cyan-400 text-sm">({h.translation})</span>
       </span>
     )
     lastIndex = h.end

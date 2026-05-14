@@ -253,12 +253,12 @@ export default function Home() {
           <div
             className={`
               flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer mb-1
-              ${selectedFolder === null ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'}
+              ${selectedFolder === null ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-100'}
             `}
             onClick={() => setSelectedFolder(null)}
           >
             <Folder size={16} />
-            <span className="text-sm">全部文章</span>
+            <span className="text-sm">书架</span>
             <span className="ml-auto text-xs text-gray-400">{articles.length}</span>
           </div>
 
@@ -283,7 +283,7 @@ export default function Home() {
           {/* 新增文件夹按钮 */}
           <button
             onClick={() => setShowNewFolderModal(true)}
-            className="flex items-center gap-2 w-full px-2 py-2 mt-3 text-sm text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 w-full px-2 py-2 mt-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
           >
             <FolderPlus size={16} />
             <span>新增文件夹</span>
@@ -298,9 +298,9 @@ export default function Home() {
           <select
             value={selectedFolder || ''}
             onChange={(e) => setSelectedFolder(e.target.value ? e.target.value : null)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
-            <option value="">全部文章 ({articles.length})</option>
+            <option value="">书架 ({articles.length})</option>
             {folders.map(folder => (
               <option key={folder.id} value={folder.id}>{folder.name}</option>
             ))}
@@ -316,7 +316,7 @@ export default function Home() {
               placeholder="搜索文章..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
             />
           </div>
         </div>
@@ -326,7 +326,7 @@ export default function Home() {
           {getDisplayedArticles().length === 0 && !searchQuery ? (
             <div
               onClick={() => setShowNewArticleModal(true)}
-              className="flex flex-col items-center justify-center py-16 cursor-pointer border-2 border-dashed border-gray-300 rounded-lg m-3 hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+              className="flex flex-col items-center justify-center py-16 cursor-pointer border-2 border-dashed border-gray-300 rounded-lg m-3 hover:border-cyan-400 hover:bg-cyan-50/30 transition-colors"
             >
               <FilePlus size={36} className="text-gray-300 mb-3" />
               <p className="text-gray-400 text-sm">点击添加文章</p>
@@ -374,7 +374,7 @@ export default function Home() {
             placeholder="文件夹名称"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
           />
@@ -405,7 +405,7 @@ export default function Home() {
             placeholder="粘贴文章内容...&#10;&#10;第一行将自动作为文章标题"
             value={newArticleContent}
             onChange={(e) => setNewArticleContent(e.target.value)}
-            className="w-full h-64 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full h-64 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
             autoFocus
           />
           <div className="flex gap-3">
@@ -435,7 +435,7 @@ export default function Home() {
             placeholder="编辑文章内容..."
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="w-full h-64 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full h-64 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
             autoFocus
           />
           <div className="flex gap-3">
@@ -460,7 +460,7 @@ export default function Home() {
         title="导入文章"
       >
         <div className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors cursor-pointer relative">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-cyan-400 transition-colors cursor-pointer relative">
             <Upload size={32} className="mx-auto mb-2 text-gray-400" />
             <p className="text-sm text-gray-600 mb-1">点击选择文件或拖拽到此处</p>
             <p className="text-xs text-gray-400">支持 .txt 文件</p>
@@ -495,7 +495,7 @@ export default function Home() {
             onClick={() => confirmMoveArticle(null)}
             className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
               movingArticle?.folder_id === null 
-                ? 'bg-blue-50 text-blue-600' 
+                ? 'bg-cyan-50 text-cyan-600' 
                 : 'hover:bg-gray-100'
             }`}
           >
@@ -513,7 +513,7 @@ export default function Home() {
                 onClick={() => confirmMoveArticle(folder.id)}
                 className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                   movingArticle?.folder_id === folder.id 
-                    ? 'bg-blue-50 text-blue-600' 
+                    ? 'bg-cyan-50 text-cyan-600' 
                     : 'hover:bg-gray-100'
                 }`}
               >
@@ -570,7 +570,7 @@ function FolderItem({
       <div
         className={`
           flex items-center gap-1 px-2 py-1.5 rounded cursor-pointer group
-          ${selectedFolder === folder.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'}
+          ${selectedFolder === folder.id ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-100'}
         `}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => onSelect(folder.id)}
@@ -647,7 +647,7 @@ function ArticleItem({
           <span>{article.word_count} 字</span>
           <span>{new Date(article.updated_at).toLocaleDateString()}</span>
           {article.read_progress > 0 && (
-            <span className="text-blue-600">{article.read_progress}% 已读</span>
+            <span className="text-cyan-600">{article.read_progress}% 已读</span>
           )}
         </div>
       </div>

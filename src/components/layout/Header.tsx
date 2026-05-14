@@ -14,19 +14,20 @@ export default function Header() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">流</span>
             </div>
             <span className="text-lg font-semibold text-gray-900">流式网读</span>
           </Link>
 
-          {/* 右侧：单词本 + 设置 + 登录/注册/退出 */}
+          {/* 右侧导航 */}
           <nav className="flex items-center gap-1">
+            {/* 桌面端单词本 */}
             <Link
               to="/wordbook"
               className={`
-                flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                ${isActive('/wordbook') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}
+                hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${isActive('/wordbook') ? 'bg-cyan-50 text-cyan-600' : 'text-gray-600 hover:bg-gray-100'}
               `}
             >
               <BookMarked size={18} />
@@ -36,7 +37,7 @@ export default function Header() {
               to="/settings"
               className={`
                 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                ${isActive('/settings') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}
+                ${isActive('/settings') ? 'bg-cyan-50 text-cyan-600' : 'text-gray-600 hover:bg-gray-100'}
               `}
             >
               <Settings size={18} />
@@ -53,7 +54,7 @@ export default function Header() {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-3 py-1.5 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
                 >
                   注册
                 </Link>
@@ -68,6 +69,20 @@ export default function Header() {
               </button>
             )}
           </nav>
+        </div>
+
+        {/* 移动端：单词本按钮（在导航栏下方） */}
+        <div className="sm:hidden flex items-center justify-between py-2 border-t border-gray-100">
+          <Link
+            to="/wordbook"
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              ${isActive('/wordbook') ? 'bg-cyan-50 text-cyan-600' : 'text-gray-600 hover:bg-gray-50'}
+            `}
+          >
+            <BookMarked size={18} />
+            <span>单词本</span>
+          </Link>
         </div>
       </div>
     </header>

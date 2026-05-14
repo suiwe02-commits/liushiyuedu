@@ -146,7 +146,7 @@ export default function Wordbook() {
             <button
               onClick={() => setMode('flashcard')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'flashcard' ? 'bg-white shadow text-blue-600' : 'text-gray-600'
+                mode === 'flashcard' ? 'bg-white shadow text-cyan-600' : 'text-gray-600'
               }`}
             >
               <Shuffle size={16} />
@@ -155,7 +155,7 @@ export default function Wordbook() {
             <button
               onClick={() => setMode('list')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'list' ? 'bg-white shadow text-blue-600' : 'text-gray-600'
+                mode === 'list' ? 'bg-white shadow text-cyan-600' : 'text-gray-600'
               }`}
             >
               <List size={16} />
@@ -196,7 +196,7 @@ export default function Wordbook() {
             </span>
             <div className="flex-1 mx-4 bg-gray-200 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-cyan-600 h-2 rounded-full transition-all"
                 style={{ width: `${((currentCardIndex + 1) / entries.length) * 100}%` }}
               />
             </div>
@@ -237,7 +237,7 @@ export default function Wordbook() {
             {/* 翻译 */}
             <div className="text-center">
               {showTranslation ? (
-                <p className="text-xl text-blue-600">
+                <p className="text-xl text-cyan-600">
                   {entries[currentCardIndex].translation}
                 </p>
               ) : (
@@ -298,7 +298,7 @@ export default function Wordbook() {
                       <Volume2 size={14} className="text-gray-400" />
                     </button>
                   </div>
-                  <p className="text-sm text-blue-600 truncate">{entry.translation}</p>
+                  <p className="text-sm text-cyan-600 truncate">{entry.translation}</p>
                 </div>
                 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
