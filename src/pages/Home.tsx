@@ -318,7 +318,7 @@ export default function Home() {
               <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>点击添加文章</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-50'}`}>
               {getDisplayedArticles().map(article => (
                 <ArticleItem
                   key={article.id}

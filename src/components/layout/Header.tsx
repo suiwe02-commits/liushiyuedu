@@ -134,7 +134,7 @@ export default function Header() {
         </div>
 
         {/* 移动端：单词本按钮（在导航栏下方） */}
-        <div className={`sm:hidden flex items-center justify-between py-2 border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-100'}`}>
+        <div className={`sm:hidden flex items-center py-2 border-t ${isDarkMode ? 'border-gray-800' : 'border-gray-100'}`}>
           <Link
             to="/wordbook"
             className={`
@@ -150,6 +150,21 @@ export default function Header() {
             <BookMarked size={18} />
             <span>单词本</span>
           </Link>
+          
+          {/* 移动端导出按钮（只在单词本页面显示，在单词本按钮正右侧） */}
+          {isWordbook && entries.length > 0 && (
+            <button
+              onClick={handleExport}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isDarkMode 
+                  ? 'text-gray-300 hover:bg-gray-800' 
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Download size={18} />
+              <span>导出</span>
+            </button>
+          )}
         </div>
       </div>
     </header>
