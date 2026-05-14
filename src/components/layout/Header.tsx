@@ -30,7 +30,7 @@ export default function Header() {
               `}
             >
               <BookMarked size={18} />
-              <span className="hidden sm:inline">单词本</span>
+              <span>单词本</span>
             </Link>
             <Link
               to="/settings"

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { BookMarked, Trash2, Download, Shuffle, List, Volume2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Trash2, Download, Shuffle, List, ArrowLeft, Volume2, BookMarked } from 'lucide-react'
 import { useWordbookStore } from '@/stores/wordbookStore'
 import { localDB } from '@/services/localDB'
 import { getWordAudio } from '@/api/dictionary'
 import Button from '@/components/common/Button'
 
 export default function Wordbook() {
+  const navigate = useNavigate()
   const { entries, setEntries, removeEntry, mode, setMode } = useWordbookStore()
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [showTranslation, setShowTranslation] = useState(false)
@@ -127,11 +129,13 @@ export default function Wordbook() {
       {/* 头部 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <BookMarked size={20} className="text-blue-600" />
-          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft size={20} className="text-gray-600" />
+          </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">单词本</h1>
             <p className="text-sm text-gray-500">{entries.length} 个单词</p>
           </div>
         </div>
