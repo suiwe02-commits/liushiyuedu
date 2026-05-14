@@ -42,6 +42,40 @@ export default function Reader() {
     loadArticle()
   }, [articleId])
 
+  // 移动端选词支持：监听 selectionchange 事件
+  useEffect(() => {
+    let timeoutId: number | null = null
+    
+    const handleSelectionChange = () => {
+      // 清除之前的定时器
+      if (timeoutId) clearTimeout(timeoutId)
+      
+      // 延迟执行，等待选区稳定
+      timeoutId = window.setTimeout(() => {
+        const selection = window.getSelection()
+        if (!selection || selection.isCollapsed) return
+        
+        const selectedText = selection.toString().trim()
+        if (!selectedText || selectedText.length > 50 || selectedText.includes(' ')) return
+        
+        const word = selectedText.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+        if (!word || word.length < 2) return
+        
+        // 检查选区是否在文章内容区域内
+        const range = selection.getRangeAt(0)
+        if (contentRef.current && contentRef.current.contains(range.commonAncestorContainer)) {
+          handleTextSelect()
+        }
+      }, 300)
+    }
+    
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [articleId, annotations])
+
   const loadArticle = async () => {
     if (!articleId) return
     setIsLoading(true)
@@ -363,7 +397,10 @@ export default function Reader() {
             className="prose prose-lg max-w-none"
             style={{ fontSize: `${fontSize}px`, lineHeight }}
             onMouseUp={handleTextSelect}
-            onTouchEnd={() => setTimeout(handleTextSelect, 150)}
+            onTouchEnd={() => {
+              // 移动端选词：等待选区完成
+              setTimeout(handleTextSelect, 300)
+            }}
           >
             {paragraphs.map((paragraph, index) => {
               const translation = translations.find(
