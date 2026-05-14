@@ -125,9 +125,13 @@ export default function Reader() {
     } else {
       setIsLookingUp(true)
       try {
-        const result = await lookupWord(word)
+        // 并行执行查词和获取发音
+        const [result, audioUrl] = await Promise.all([
+          lookupWord(word),
+          getWordAudio(word)
+        ])
         setWordResult(result)
-        const audioUrl = await getWordAudio(word)
+        // 翻译显示后再播放发音，不阻塞UI
         if (audioUrl) {
           const audio = new Audio(audioUrl)
           audio.play().catch(() => {})
