@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FolderPlus, FilePlus, Upload, Search, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
 import { localDB } from '@/services/localDB'
@@ -346,15 +347,18 @@ export default function Home() {
 
         {/* 文章列表 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {getDisplayedArticles().length === 0 ? (
+          {getDisplayedArticles().length === 0 && !searchQuery ? (
+            <div
+              onClick={() => setShowNewArticleModal(true)}
+              className="flex flex-col items-center justify-center py-16 cursor-pointer border-2 border-dashed border-gray-300 rounded-lg m-3 hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+            >
+              <FilePlus size={36} className="text-gray-300 mb-3" />
+              <p className="text-gray-400 text-sm">点击添加文章</p>
+            </div>
+          ) : getDisplayedArticles().length === 0 && searchQuery ? (
             <div className="py-12 text-center">
-              <FilePlus size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 mb-2">
-                {searchQuery ? '没有找到匹配的文章' : '还没有文章'}
-              </p>
-              <p className="text-sm text-gray-400">
-                {searchQuery ? '尝试其他关键词' : '点击上方按钮创建或导入文章'}
-              </p>
+              <p className="text-gray-500 mb-2">没有找到匹配的文章</p>
+              <p className="text-sm text-gray-400">尝试其他关键词</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -367,6 +371,16 @@ export default function Home() {
                   onMove={handleMoveArticle}
                 />
               ))}
+              {/* 底部虚线框 - 添加更多文章 */}
+              <div
+                onClick={() => setShowNewArticleModal(true)}
+                className="flex items-center justify-center py-6 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <FilePlus size={16} />
+                  <span>添加文章</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -643,10 +657,12 @@ function ArticleItem({
   onMove: (article: Article) => void
 }) {
   const [showMenu, setShowMenu] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 group transition-colors"
+      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 group transition-colors cursor-pointer rounded-lg"
+      onClick={() => navigate(`/reader/${article.id}`)}
       onMouseLeave={() => setShowMenu(false)}
     >
       <div className="flex-1 min-w-0">
@@ -660,55 +676,53 @@ function ArticleItem({
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
-        <a
-          href={`/reader/${article.id}`}
-          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+      <div className="relative">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowMenu(!showMenu)
+          }}
+          className="p-1.5 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          阅读
-        </a>
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 hover:bg-gray-200 rounded"
-          >
-            <MoreVertical size={16} />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
-              <button
-                onClick={() => {
-                  onEdit(article)
-                  setShowMenu(false)
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Edit3 size={14} />
-                编辑
-              </button>
-              <button
-                onClick={() => {
-                  onMove(article)
-                  setShowMenu(false)
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                <Move size={14} />
-                移动
-              </button>
-              <button
-                onClick={() => {
-                  onDelete(article.id)
-                  setShowMenu(false)
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={14} />
-                删除
-              </button>
-            </div>
-          )}
-        </div>
+          <MoreVertical size={16} />
+        </button>
+        {showMenu && (
+          <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(article)
+                setShowMenu(false)
+              }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Edit3 size={14} />
+              编辑
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onMove(article)
+                setShowMenu(false)
+              }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Move size={14} />
+              移动
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(article.id)
+                setShowMenu(false)
+              }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={14} />
+              删除
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

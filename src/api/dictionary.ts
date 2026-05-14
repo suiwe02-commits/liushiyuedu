@@ -391,6 +391,10 @@ const commonTranslations: Record<string, string[]> = {
 /**
  * 查询单词释义（返回中文翻译）
  */
+
+// 运行时内存缓存，避免重复调用API
+const apiCache = new Map<string, DictionaryResult>()
+
 export const lookupWord = async (word: string): Promise<DictionaryResult | null> => {
   try {
     const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '')
@@ -410,12 +414,17 @@ export const lookupWord = async (word: string): Promise<DictionaryResult | null>
       }
     }
 
-    // 2. 使用百度翻译大模型 API 获取中文翻译
+    // 2. 查运行时缓存
+    if (apiCache.has(cleanWord)) {
+      return apiCache.get(cleanWord)!
+    }
+
+    // 3. 使用百度翻译大模型 API 获取中文翻译
     try {
       const chineseTranslation = await translateWord(cleanWord)
 
       if (chineseTranslation) {
-        return {
+        const result: DictionaryResult = {
           word: cleanWord,
           phonetic: '',
           meanings: [{
@@ -423,12 +432,15 @@ export const lookupWord = async (word: string): Promise<DictionaryResult | null>
             definitions: [{ definition: chineseTranslation }]
           }]
         }
+        // 缓存API结果
+        apiCache.set(cleanWord, result)
+        return result
       }
     } catch (apiError) {
       console.log('Translation API failed, using fallback')
     }
 
-    // 3. 如果 API 失败，返回单词本身作为备选
+    // 4. 如果 API 失败，返回单词本身作为备选
     return {
       word: cleanWord,
       phonetic: '',
