@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trash2, Download, Shuffle, List, ArrowLeft, Volume2, BookMarked } from 'lucide-react'
+import { Trash2, Shuffle, List, ArrowLeft, Volume2, BookMarked } from 'lucide-react'
 import { useWordbookStore } from '@/stores/wordbookStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
 import { getWordAudio } from '@/api/dictionary'
 import Button from '@/components/common/Button'
@@ -9,6 +10,7 @@ import Button from '@/components/common/Button'
 export default function Wordbook() {
   const navigate = useNavigate()
   const { entries, setEntries, removeEntry, mode, setMode } = useWordbookStore()
+  const { isDarkMode } = useThemeStore()
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [showTranslation, setShowTranslation] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -34,24 +36,6 @@ export default function Wordbook() {
     if (!confirm('确定要从单词本中删除这个单词？')) return
     await localDB.wordbook.remove(id)
     removeEntry(id)
-  }
-
-  // 导出CSV（只导出英文和中文）
-  const handleExport = () => {
-    const headers = ['英文', '中文']
-    const rows = entries.map(e => [
-      e.word,
-      e.translation,
-    ])
-    
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `单词本_${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   // 播放发音
@@ -128,22 +112,28 @@ export default function Wordbook() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
           >
-            <ArrowLeft size={20} className="text-gray-600" />
+            <ArrowLeft size={20} className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
           </button>
           <div>
-            <p className="text-sm text-gray-500">{entries.length} 个单词</p>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{entries.length} 个单词</p>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           {/* 模式切换 */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className={`flex rounded-lg p-1 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
             <button
               onClick={() => setMode('flashcard')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'flashcard' ? 'bg-white shadow text-cyan-600' : 'text-gray-600'
+                mode === 'flashcard' 
+                  ? isDarkMode 
+                    ? 'bg-gray-700 shadow text-cyan-400' 
+                    : 'bg-white shadow text-cyan-600' 
+                  : isDarkMode 
+                    ? 'text-gray-400' 
+                    : 'text-gray-600'
               }`}
             >
               <Shuffle size={16} />
@@ -152,46 +142,40 @@ export default function Wordbook() {
             <button
               onClick={() => setMode('list')}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                mode === 'list' ? 'bg-white shadow text-cyan-600' : 'text-gray-600'
+                mode === 'list' 
+                  ? isDarkMode 
+                    ? 'bg-gray-700 shadow text-cyan-400' 
+                    : 'bg-white shadow text-cyan-600' 
+                  : isDarkMode 
+                    ? 'text-gray-400' 
+                    : 'text-gray-600'
               }`}
             >
               <List size={16} />
               列表
             </button>
           </div>
-          
-          {/* 导出 */}
-          {entries.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Download size={16} />}
-              onClick={handleExport}
-            >
-              导出
-            </Button>
-          )}
         </div>
       </div>
 
       {/* 内容 */}
       {entries.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 py-12 text-center">
-          <BookMarked size={48} className="mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500 mb-2">单词本为空</p>
-          <p className="text-sm text-gray-400">
+        <div className={`rounded-lg shadow-sm border py-12 text-center transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <BookMarked size={48} className={`mx-auto mb-4 ${isDarkMode ? 'text-gray-600' : 'text-gray-300'}`} />
+          <p className={`mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>单词本为空</p>
+          <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             在阅读时选中单词并选择释义，单词会自动添加到单词本
           </p>
         </div>
       ) : mode === 'flashcard' ? (
         /* 背诵模式 */
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className={`rounded-lg shadow-sm border p-6 transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           {/* 进度指示 */}
           <div className="flex items-center justify-between mb-6">
-            <span className="text-sm text-gray-500">
+            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               第 {currentCardIndex + 1} / {entries.length}
             </span>
-            <div className="flex-1 mx-4 bg-gray-200 rounded-full h-2">
+            <div className={`flex-1 mx-4 rounded-full h-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div
                 className="bg-cyan-600 h-2 rounded-full transition-all"
                 style={{ width: `${((currentCardIndex + 1) / entries.length) * 100}%` }}
@@ -199,10 +183,10 @@ export default function Wordbook() {
             </div>
             <button
               onClick={() => setCurrentCardIndex(Math.floor(Math.random() * entries.length))}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
               title="随机跳转"
             >
-              <Shuffle size={18} className="text-gray-500" />
+              <Shuffle size={18} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
             </button>
           </div>
 
@@ -212,7 +196,7 @@ export default function Wordbook() {
             onClick={() => setShowTranslation(!showTranslation)}
           >
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                 {entries[currentCardIndex].word}
               </h2>
               <button
@@ -220,13 +204,13 @@ export default function Wordbook() {
                   e.stopPropagation()
                   handlePlayAudio(entries[currentCardIndex].word)
                 }}
-                className="p-2 hover:bg-gray-100 rounded-full"
+                className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
               >
-                <Volume2 size={20} className="text-gray-500" />
+                <Volume2 size={20} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
               </button>
             </div>
             {entries[currentCardIndex].phonetic && (
-              <p className="text-gray-500 mb-6">
+              <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {entries[currentCardIndex].phonetic}
               </p>
             )}
@@ -234,11 +218,11 @@ export default function Wordbook() {
             {/* 翻译 */}
             <div className="text-center">
               {showTranslation ? (
-                <p className="text-xl text-cyan-600">
+                <p className={`text-xl ${isDarkMode ? 'text-cyan-400' : 'text-cyan-600'}`}>
                   {entries[currentCardIndex].translation}
                 </p>
               ) : (
-                <p className="text-gray-400">点击显示翻译</p>
+                <p className={isDarkMode ? 'text-gray-500' : 'text-gray-400'}>点击显示翻译</p>
               )}
             </div>
           </div>
@@ -269,37 +253,37 @@ export default function Wordbook() {
             </Button>
           </div>
           
-          <p className="text-center text-sm text-gray-400 mt-4">
+          <p className={`text-center text-sm mt-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             点击卡片也可以翻转
           </p>
         </div>
       ) : (
         /* 列表模式 */
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="divide-y divide-gray-100">
+        <div className={`rounded-lg shadow-sm border transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
             {entries.map((entry) => (
               <div
                 key={entry.id}
-                className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 group"
+                className={`flex items-center gap-4 px-4 py-3 group ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{entry.word}</span>
+                    <span className={`font-medium ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>{entry.word}</span>
                     {entry.phonetic && (
-                      <span className="text-sm text-gray-400">{entry.phonetic}</span>
+                      <span className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{entry.phonetic}</span>
                     )}
                     <button
                       onClick={() => handlePlayAudio(entry.word)}
-                      className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      className={`p-1 rounded transition-opacity opacity-0 group-hover:opacity-100 ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-200'}`}
                     >
-                      <Volume2 size={14} className="text-gray-400" />
+                      <Volume2 size={14} className={isDarkMode ? 'text-gray-500' : 'text-gray-400'} />
                     </button>
                   </div>
-                  <p className="text-sm text-cyan-600 truncate">{entry.translation}</p>
+                  <p className={`text-sm truncate ${isDarkMode ? 'text-cyan-400' : 'text-cyan-600'}`}>{entry.translation}</p>
                 </div>
                 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-gray-400">
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                     {new Date(entry.created_at).toLocaleDateString()}
                   </span>
                   <button

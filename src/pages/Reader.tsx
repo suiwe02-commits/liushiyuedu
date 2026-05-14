@@ -396,7 +396,7 @@ export default function Reader() {
         ) : (
           <article
             ref={contentRef}
-            className="prose prose-lg max-w-none"
+            className={`prose prose-lg max-w-none ${isDarkMode ? 'prose-invert' : ''}`}
             style={{ fontSize: `${fontSize}px`, lineHeight }}
             onMouseUp={handleTextSelect}
             onTouchEnd={() => {
@@ -417,7 +417,7 @@ export default function Reader() {
                 <div key={index} className="mb-1 relative group">
                   {/* 原文和译按钮行内排列 */}
                   <div className="flex items-start gap-1">
-                    <div className="text-gray-800 whitespace-pre-wrap flex-1">
+                    <div className={`whitespace-pre-wrap flex-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                       {articleId && renderParagraphWithHighlights(paragraph, annotations, articleId, handleWordClick)}
                     </div>
                     
@@ -426,7 +426,7 @@ export default function Reader() {
                       <button
                         onClick={() => handleTranslate(index, paragraph)}
                         disabled={isTranslating}
-                        className="flex-shrink-0 text-xs text-gray-400 hover:text-cyan-600 px-1 -mt-0.5"
+                        className={`flex-shrink-0 text-xs px-1 -mt-0.5 ${isDarkMode ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-400 hover:text-cyan-600'}`}
                         title="翻译"
                       >
                         {isTranslating ? <RefreshCw size={10} className="animate-spin" /> : <span>译</span>}
@@ -452,12 +452,12 @@ export default function Reader() {
                   
                   {/* 翻译内容 */}
                   {showTranslation && translation && (
-                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border-l-4 border-cyan-400">
+                    <div className={`mt-3 p-4 rounded-lg border-l-4 border-cyan-400 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-cyan-600">中文翻译</span>
                         <button
                           onClick={() => handleTranslate(index, paragraph)}
-                          className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+                          className={`text-xs flex items-center gap-1 ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -465,7 +465,7 @@ export default function Reader() {
                           <span>收起</span>
                         </button>
                       </div>
-                      <p className="text-gray-700 leading-relaxed">{translation.translated_text}</p>
+                      <p className={`leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{translation.translated_text}</p>
                     </div>
                   )}
                 </div>
