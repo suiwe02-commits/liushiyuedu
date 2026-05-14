@@ -1,14 +1,31 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Settings, LogOut, BookMarked, Moon, Sun } from 'lucide-react'
+import { Settings, LogOut, BookMarked, Moon, Sun, Download } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { useWordbookStore } from '@/stores/wordbookStore'
 
 export default function Header() {
   const location = useLocation()
   const { isAuthenticated, logout } = useAuthStore()
   const { isDarkMode, toggleDarkMode } = useThemeStore()
+  const { entries } = useWordbookStore()
 
   const isActive = (path: string) => location.pathname === path
+  const isWordbook = location.pathname === '/wordbook'
+
+  // 导出单词本
+  const handleExport = () => {
+    const headers = ['英文', '中文']
+    const rows = entries.map(e => [e.word, e.translation])
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `单词本_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <header className={`sticky top-0 z-40 border-b ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
@@ -50,6 +67,21 @@ export default function Header() {
               <BookMarked size={18} />
               <span>单词本</span>
             </Link>
+
+            {/* 单词本导出按钮（只在单词本页面显示） */}
+            {isWordbook && entries.length > 0 && (
+              <button
+                onClick={handleExport}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-800' 
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Download size={18} />
+                <span className="hidden sm:inline">导出</span>
+              </button>
+            )}
             <Link
               to="/settings"
               className={`

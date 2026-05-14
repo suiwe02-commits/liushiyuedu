@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderPlus, FilePlus, Upload, Search, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
+import { FolderPlus, FilePlus, Upload, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
@@ -14,7 +14,6 @@ export default function Home() {
   
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const [searchQuery, setSearchQuery] = useState('')
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
   const [showNewArticleModal, setShowNewArticleModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -219,17 +218,9 @@ export default function Home() {
 
   // 获取当前显示的文章
   const getDisplayedArticles = () => {
-    let filtered = selectedFolder
+    const filtered = selectedFolder
       ? articles.filter(a => a.folder_id === selectedFolder)
       : articles.filter(a => !a.folder_id)
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(a => 
-        a.title.toLowerCase().includes(query) ||
-        a.content.toLowerCase().includes(query)
-      )
-    }
 
     return filtered.sort((a, b) => 
       new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
@@ -312,34 +303,19 @@ export default function Home() {
           getFolderTree={getFolderTree}
         />
 
-        {/* 搜索栏 */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜索文章..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
-            />
-          </div>
-        </div>
-
         {/* 文章列表 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {getDisplayedArticles().length === 0 && !searchQuery ? (
+        <div className={`rounded-lg shadow-sm border transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {getDisplayedArticles().length === 0 ? (
             <div
               onClick={() => setShowNewArticleModal(true)}
-              className="flex flex-col items-center justify-center py-16 cursor-pointer border-2 border-dashed border-gray-300 rounded-lg m-3 hover:border-cyan-400 hover:bg-cyan-50/30 transition-colors"
+              className={`flex flex-col items-center justify-center py-16 cursor-pointer border-2 border-dashed rounded-lg m-3 transition-colors ${
+                isDarkMode 
+                  ? 'border-gray-600 hover:border-cyan-500 hover:bg-cyan-900/20' 
+                  : 'border-gray-300 hover:border-cyan-400 hover:bg-cyan-50/30'
+              }`}
             >
-              <FilePlus size={36} className="text-gray-300 mb-3" />
-              <p className="text-gray-400 text-sm">点击添加文章</p>
-            </div>
-          ) : getDisplayedArticles().length === 0 && searchQuery ? (
-            <div className="py-12 text-center">
-              <p className="text-gray-500 mb-2">没有找到匹配的文章</p>
-              <p className="text-sm text-gray-400">尝试其他关键词</p>
+              <FilePlus size={36} className={`mb-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-300'}`} />
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>点击添加文章</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -659,7 +635,6 @@ function MobileFolderItem({
 }) {
   const children = getFolderTree(folder.id)
   const hasChildren = children.length > 0
-  const articleCount = articles.filter(a => a.folder_id === folder.id).length
   const isExpanded = expandedFolders.has(folder.id)
 
   return (
@@ -684,13 +659,11 @@ function MobileFolderItem({
           <span className="w-5" />
         )}
         <Folder size={16} />
-        <span
-          className="text-sm flex-1 truncate"
+        <span className="text-sm flex-1 truncate"
           onClick={() => onSelect(folder.id)}
         >
           {folder.name}
         </span>
-        <span className="text-xs text-gray-400">{articleCount}</span>
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -751,7 +724,6 @@ function FolderItem({
 }) {
   const children = getFolderTree(folder.id)
   const hasChildren = children.length > 0
-  const articleCount = articles.filter(a => a.folder_id === folder.id).length
   const isExpanded = expandedFolders.has(folder.id)
 
   return (
@@ -779,7 +751,6 @@ function FolderItem({
         )}
         <Folder size={16} />
         <span className="text-sm flex-1 truncate">{folder.name}</span>
-        <span className="text-xs text-gray-400">{articleCount}</span>
         <button
           onClick={(e) => {
             e.stopPropagation()

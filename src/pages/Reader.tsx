@@ -4,6 +4,7 @@ import { ArrowLeft, Settings, BookMarked, ZoomIn, ZoomOut, RefreshCw, Edit3, Che
 import { useArticleStore } from '@/stores/articleStore'
 import { useAnnotationStore } from '@/stores/annotationStore'
 import { useWordbookStore } from '@/stores/wordbookStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
 import { lookupWord } from '@/api/dictionary'
 import { translateText } from '@/api/translation'
@@ -12,6 +13,7 @@ import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Reader() {
+  const { isDarkMode } = useThemeStore()
   const { articleId } = useParams<{ articleId: string }>()
   const navigate = useNavigate()
   const contentRef = useRef<HTMLDivElement>(null)
@@ -309,8 +311,8 @@ export default function Reader() {
   const paragraphs = article.content.split(/\n/)
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200">
+    <div className={`min-h-screen transition-colors ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white text-gray-900'}`}>
+      <header className={`sticky top-0 z-30 backdrop-blur border-b transition-colors ${isDarkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'}`}>
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3">

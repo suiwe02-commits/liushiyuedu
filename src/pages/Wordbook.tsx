@@ -36,15 +36,12 @@ export default function Wordbook() {
     removeEntry(id)
   }
 
-  // 导出CSV
+  // 导出CSV（只导出英文和中文）
   const handleExport = () => {
-    const headers = ['Word', 'Phonetic', 'Translation', 'Familiarity', 'Created']
+    const headers = ['英文', '中文']
     const rows = entries.map(e => [
       e.word,
-      e.phonetic,
       e.translation,
-      e.familiarity.toString(),
-      e.created_at,
     ])
     
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
@@ -52,7 +49,7 @@ export default function Wordbook() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `wordbook_${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `单词本_${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
