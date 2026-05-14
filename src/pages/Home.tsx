@@ -307,6 +307,7 @@ export default function Home() {
           onSelectFolder={setSelectedFolder}
           expandedFolders={expandedFolders}
           onToggleFolder={toggleFolder}
+          onDeleteFolder={handleDeleteFolder}
           onCreateFolder={() => setShowNewFolderModal(true)}
           getFolderTree={getFolderTree}
         />
@@ -549,6 +550,7 @@ function MobileBookshelf({
   onSelectFolder,
   expandedFolders,
   onToggleFolder,
+  onDeleteFolder,
   onCreateFolder,
   getFolderTree,
 }: {
@@ -557,6 +559,7 @@ function MobileBookshelf({
   onSelectFolder: (id: string | null) => void
   expandedFolders: Set<string>
   onToggleFolder: (id: string) => void
+  onDeleteFolder: (id: string) => void
   onCreateFolder: () => void
   getFolderTree: (parentId: string | null) => FolderType[]
 }) {
@@ -609,6 +612,7 @@ function MobileBookshelf({
                 }}
                 expandedFolders={expandedFolders}
                 onToggle={onToggleFolder}
+                onDelete={onDeleteFolder}
                 getFolderTree={getFolderTree}
                 articles={articles}
               />
@@ -640,6 +644,7 @@ function MobileFolderItem({
   onSelect,
   expandedFolders,
   onToggle,
+  onDelete,
   getFolderTree,
   articles,
 }: {
@@ -649,6 +654,7 @@ function MobileFolderItem({
   onSelect: (id: string) => void
   expandedFolders: Set<string>
   onToggle: (id: string) => void
+  onDelete: (id: string) => void
   getFolderTree: (parentId: string | null) => FolderType[]
   articles: Article[]
 }) {
@@ -686,6 +692,17 @@ function MobileFolderItem({
           {folder.name}
         </span>
         <span className="text-xs text-gray-400">{articleCount}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            if (confirm(`确定删除文件夹「${folder.name}」吗？`)) {
+              onDelete(folder.id)
+            }
+          }}
+          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
 
       {/* 子文件夹 */}
@@ -700,6 +717,7 @@ function MobileFolderItem({
               onSelect={onSelect}
               expandedFolders={expandedFolders}
               onToggle={onToggle}
+              onDelete={onDelete}
               getFolderTree={getFolderTree}
               articles={articles}
             />
