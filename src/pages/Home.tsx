@@ -318,6 +318,15 @@ export default function Home() {
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
+          {/* 手机端新建文件夹按钮 */}
+          <button
+            onClick={() => setShowNewFolderModal(true)}
+            className="md:hidden p-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            title="新建文件夹"
+          >
+            <FolderPlus size={18} className="text-gray-600" />
+          </button>
+          
           <Button
             variant="outline"
             leftIcon={<Upload size={16} />}
@@ -327,11 +336,11 @@ export default function Home() {
             导入
           </Button>
           <Button
-            leftIcon={<FilePlus size={16} />}
+            leftIcon={<FilePlus size={16} className="hidden sm:block" />}
             onClick={() => setShowNewArticleModal(true)}
           >
             <span className="hidden sm:inline">新建文章</span>
-            <FilePlus size={16} className="sm:hidden" />
+            <FilePlus size={18} className="sm:hidden" />
           </Button>
         </div>
 
