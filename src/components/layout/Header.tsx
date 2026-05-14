@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, BookMarked } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
 export default function Header() {
@@ -20,8 +20,18 @@ export default function Header() {
             <span className="text-lg font-semibold text-gray-900">流式网读</span>
           </Link>
 
-          {/* 右侧：设置 + 登录/注册/退出 */}
+          {/* 右侧：单词本 + 设置 + 登录/注册/退出 */}
           <nav className="flex items-center gap-1">
+            <Link
+              to="/wordbook"
+              className={`
+                flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                ${isActive('/wordbook') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}
+              `}
+            >
+              <BookMarked size={18} />
+              <span className="hidden sm:inline">单词本</span>
+            </Link>
             <Link
               to="/settings"
               className={`
