@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FolderPlus, FilePlus, Upload, Search, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
 import { Folder as FolderType, Article } from '@/types'
 import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Home() {
+  const { isDarkMode } = useThemeStore()
   const { articles, folders, setArticles, setFolders, addArticle, removeArticle, addFolder, removeFolder, updateArticle } = useArticleStore()
   
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
@@ -246,20 +248,25 @@ export default function Home() {
     <div className="flex flex-col md:flex-row md:gap-6">
       {/* 侧边栏 - 书架（树状文件夹列表） */}
       <div className="hidden md:block w-64 flex-shrink-0">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h2 className="font-semibold text-gray-900 mb-4">书架</h2>
+        <div className={`rounded-lg shadow-sm border p-4 transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <h2 className={`font-semibold mb-4 transition-colors ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>书架</h2>
 
           {/* 根目录 */}
           <div
             className={`
-              flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer mb-1
-              ${selectedFolder === null ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-100'}
+              flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer mb-1 transition-colors
+              ${selectedFolder === null 
+                ? 'bg-cyan-50 text-cyan-600' 
+                : isDarkMode 
+                  ? 'hover:bg-gray-700 text-gray-300' 
+                  : 'hover:bg-gray-100 text-gray-700'
+              }
             `}
             onClick={() => setSelectedFolder(null)}
           >
             <Folder size={16} />
             <span className="text-sm">书架</span>
-            <span className="ml-auto text-xs text-gray-400">{articles.length}</span>
+            <span className={`ml-auto text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{articles.length}</span>
           </div>
 
           {/* 文件夹树状列表 */}

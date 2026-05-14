@@ -8,11 +8,13 @@ import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Settings from '@/pages/Settings'
 import { useAuthStore } from '@/stores/authStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
   const { setUser, setLoading } = useAuthStore()
+  const { isDarkMode } = useThemeStore()
 
   useEffect(() => {
     // 初始化应用
@@ -35,12 +37,23 @@ function App() {
     initApp()
   }, [setUser, setLoading])
 
+  // 应用夜间模式到 body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode')
+      document.documentElement.classList.add('dark')
+    } else {
+      document.body.classList.remove('dark-mode')
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDarkMode])
+
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className={`min-h-screen flex items-center justify-center transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="text-center">
           <div className="loading-spinner mx-auto mb-4" />
-          <p className="text-gray-600">加载中...</p>
+          <p className={`transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>加载中...</p>
         </div>
       </div>
     )
