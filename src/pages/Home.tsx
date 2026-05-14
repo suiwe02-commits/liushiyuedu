@@ -244,19 +244,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col md:flex-row md:gap-6">
-      {/* 侧边栏 - 文件夹树 */}
+      {/* 侧边栏 - 书架（树状文件夹列表） */}
       <div className="hidden md:block w-64 flex-shrink-0">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-gray-900">文件夹</h2>
-            <button
-              onClick={() => setShowNewFolderModal(true)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="新建文件夹"
-            >
-              <FolderPlus size={18} className="text-gray-500" />
-            </button>
-          </div>
+          <h2 className="font-semibold text-gray-900 mb-4">书架</h2>
 
           {/* 根目录 */}
           <div
@@ -271,7 +262,7 @@ export default function Home() {
             <span className="ml-auto text-xs text-gray-400">{articles.length}</span>
           </div>
 
-          {/* 文件夹列表 */}
+          {/* 文件夹树状列表 */}
           <div className="space-y-1">
             {getFolderTree(null).map(folder => (
               <FolderItem
@@ -288,6 +279,15 @@ export default function Home() {
               />
             ))}
           </div>
+
+          {/* 新增文件夹按钮 */}
+          <button
+            onClick={() => setShowNewFolderModal(true)}
+            className="flex items-center gap-2 w-full px-2 py-2 mt-3 text-sm text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            <FolderPlus size={16} />
+            <span>新增文件夹</span>
+          </button>
         </div>
       </div>
 
@@ -307,9 +307,9 @@ export default function Home() {
           </select>
         </div>
 
-        {/* 操作栏 */}
-        <div className="flex items-center gap-2 sm:gap-3 mb-4">
-          <div className="flex-1 relative">
+        {/* 搜索栏 */}
+        <div className="mb-4">
+          <div className="relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
@@ -319,30 +319,6 @@ export default function Home() {
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
-          {/* 手机端新建文件夹按钮 */}
-          <button
-            onClick={() => setShowNewFolderModal(true)}
-            className="md:hidden p-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-            title="新建文件夹"
-          >
-            <FolderPlus size={18} className="text-gray-600" />
-          </button>
-          
-          <Button
-            variant="outline"
-            leftIcon={<Upload size={16} />}
-            onClick={() => setShowImportModal(true)}
-            className="hidden sm:flex"
-          >
-            导入
-          </Button>
-          <Button
-            leftIcon={<FilePlus size={16} className="hidden sm:block" />}
-            onClick={() => setShowNewArticleModal(true)}
-          >
-            <span className="hidden sm:inline">新建文章</span>
-            <FilePlus size={18} className="sm:hidden" />
-          </Button>
         </div>
 
         {/* 文章列表 */}
