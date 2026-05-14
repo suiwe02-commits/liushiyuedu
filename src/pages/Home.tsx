@@ -246,28 +246,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col md:flex-row md:gap-6">
-      {/* 侧边栏 - 书架（树状文件夹列表） */}
+      {/* 侧边栏 - 书架 */}
       <div className="hidden md:block w-64 flex-shrink-0">
         <div className={`rounded-lg shadow-sm border p-4 transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <h2 className={`font-semibold mb-4 transition-colors ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>书架</h2>
-
-          {/* 根目录 */}
-          <div
-            className={`
-              flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer mb-1 transition-colors
-              ${selectedFolder === null 
-                ? 'bg-cyan-50 text-cyan-600' 
-                : isDarkMode 
-                  ? 'hover:bg-gray-700 text-gray-300' 
-                  : 'hover:bg-gray-100 text-gray-700'
-              }
-            `}
-            onClick={() => setSelectedFolder(null)}
-          >
-            <Folder size={16} />
-            <span className="text-sm">书架</span>
-            <span className={`ml-auto text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{articles.length}</span>
-          </div>
+          <h2 className={`font-semibold mb-3 transition-colors ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>书架</h2>
 
           {/* 文件夹树状列表 */}
           <div className="space-y-1">
@@ -287,13 +269,30 @@ export default function Home() {
             ))}
           </div>
 
-          {/* 新增文件夹按钮 */}
+          {/* 新增文件夹 */}
           <button
             onClick={() => setShowNewFolderModal(true)}
-            className="flex items-center gap-2 w-full px-2 py-2 mt-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+            className={`flex items-center gap-2 w-full px-2 py-2 mt-2 text-sm rounded-lg transition-colors ${
+              isDarkMode 
+                ? 'text-gray-400 hover:text-cyan-400 hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-cyan-600 hover:bg-cyan-50'
+            }`}
           >
             <FolderPlus size={16} />
             <span>新增文件夹</span>
+          </button>
+
+          {/* 新增文章 */}
+          <button
+            onClick={() => setShowNewArticleModal(true)}
+            className={`flex items-center gap-2 w-full px-2 py-2 mt-1 text-sm rounded-lg transition-colors ${
+              isDarkMode 
+                ? 'text-gray-400 hover:text-cyan-400 hover:bg-gray-700' 
+                : 'text-gray-500 hover:text-cyan-600 hover:bg-cyan-50'
+            }`}
+          >
+            <FilePlus size={16} />
+            <span>新增文章</span>
           </button>
         </div>
       </div>
@@ -309,6 +308,7 @@ export default function Home() {
           onToggleFolder={toggleFolder}
           onDeleteFolder={handleDeleteFolder}
           onCreateFolder={() => setShowNewFolderModal(true)}
+          onCreateArticle={() => setShowNewArticleModal(true)}
           getFolderTree={getFolderTree}
         />
 
@@ -552,6 +552,7 @@ function MobileBookshelf({
   onToggleFolder,
   onDeleteFolder,
   onCreateFolder,
+  onCreateArticle,
   getFolderTree,
 }: {
   articles: Article[]
@@ -561,12 +562,13 @@ function MobileBookshelf({
   onToggleFolder: (id: string) => void
   onDeleteFolder: (id: string) => void
   onCreateFolder: () => void
+  onCreateArticle: () => void
   getFolderTree: (parentId: string | null) => FolderType[]
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="md:hidden mb-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="md:hidden mb-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       {/* 书架标题 - 点击展开/折叠 */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -574,7 +576,7 @@ function MobileBookshelf({
       >
         <div className="flex items-center gap-2">
           <Folder size={18} className="text-cyan-600" />
-          <span className="font-medium text-gray-900">书架</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">书架</span>
           <span className="text-xs text-gray-400">({articles.length})</span>
         </div>
         {isExpanded ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
@@ -582,22 +584,7 @@ function MobileBookshelf({
 
       {/* 展开的树状列表 */}
       {isExpanded && (
-        <div className="border-t border-gray-100">
-          {/* 全部文章 */}
-          <div
-            className={`flex items-center gap-2 px-4 py-2.5 cursor-pointer ${
-              selectedFolder === null ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => {
-              onSelectFolder(null)
-              setIsExpanded(false)
-            }}
-          >
-            <Folder size={16} />
-            <span className="text-sm">全部文章</span>
-            <span className="ml-auto text-xs text-gray-400">{articles.length}</span>
-          </div>
-
+        <div className="border-t border-gray-100 dark:border-gray-700">
           {/* 文件夹树 */}
           <div className="max-h-64 overflow-y-auto">
             {getFolderTree(null).map(folder => (
@@ -619,16 +606,28 @@ function MobileBookshelf({
             ))}
           </div>
 
-          {/* 新增文件夹按钮 */}
+          {/* 新增文件夹 */}
           <button
             onClick={() => {
               onCreateFolder()
               setIsExpanded(false)
             }}
-            className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 border-t border-gray-100 transition-colors"
+            className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 transition-colors"
           >
             <FolderPlus size={16} />
             <span>新增文件夹</span>
+          </button>
+
+          {/* 新增文章 */}
+          <button
+            onClick={() => {
+              onCreateArticle()
+              setIsExpanded(false)
+            }}
+            className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-500 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 transition-colors"
+          >
+            <FilePlus size={16} />
+            <span>新增文章</span>
           </button>
         </div>
       )}
@@ -848,7 +847,7 @@ function ArticleItem({
             e.stopPropagation()
             setShowMenu(!showMenu)
           }}
-          className="p-1.5 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1.5 hover:bg-gray-200 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         >
           <MoreVertical size={16} />
         </button>
