@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, Palette, Database, Shield, Info, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Settings as SettingsIcon, Palette, Database, Shield, Info, Trash2, ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { localDB } from '@/services/localDB'
@@ -7,6 +8,7 @@ import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Settings() {
+  const navigate = useNavigate()
   const { user, isAuthenticated, logout } = useAuthStore()
   const { isDarkMode } = useThemeStore()
   const [showClearDataModal, setShowClearDataModal] = useState(false)
@@ -36,7 +38,13 @@ export default function Settings() {
     <div>
       {/* 头部 */}
       <div className="flex items-center gap-3 mb-6">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+        <button
+          onClick={() => navigate('/')}
+          className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+        >
+          <ArrowLeft size={20} className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
+        </button>
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}">
           <SettingsIcon size={20} className={isDarkMode ? 'text-gray-400' : 'text-gray-600'} />
         </div>
         <div>

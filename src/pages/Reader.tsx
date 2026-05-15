@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Settings, BookMarked, ZoomIn, ZoomOut, RefreshCw, Edit3, Check, X } from 'lucide-react'
+import { ArrowLeft, Settings, BookMarked, ZoomIn, ZoomOut, RefreshCw, Edit3, Check, X, Moon, Sun } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
 import { useAnnotationStore } from '@/stores/annotationStore'
 import { useWordbookStore } from '@/stores/wordbookStore'
@@ -13,7 +13,7 @@ import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Reader() {
-  const { isDarkMode } = useThemeStore()
+  const { isDarkMode, toggleDarkMode } = useThemeStore()
   const { articleId } = useParams<{ articleId: string }>()
   const navigate = useNavigate()
   const contentRef = useRef<HTMLDivElement>(null)
@@ -371,6 +371,14 @@ export default function Reader() {
               </button>
               
               <button
+                onClick={toggleDarkMode}
+                className={`p-2.5 rounded-lg transition-colors ${isDarkMode ? 'text-yellow-400 hover:bg-gray-800' : 'hover:bg-gray-100 text-gray-600'}`}
+                title={isDarkMode ? '日间模式' : '夜间模式'}
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
+              <button
                 onClick={() => setShowSettings(true)}
                 className={`p-2.5 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
               >
@@ -435,44 +443,46 @@ export default function Reader() {
               
               return (
                 <div key={index} className="mb-1 relative group">
-                  {/* 原文和译按钮行内排列 */}
-                  <div className="flex items-start gap-1">
-                    <div className={`whitespace-pre-wrap flex-1 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                      {articleId && renderParagraphWithHighlights(paragraph, annotations, articleId, handleWordClick)}
-                    </div>
-                    
-                    {/* 译字符号 - 紧贴段落 */}
-                    {!hasTranslation ? (
-                      <button
-                        onClick={() => handleTranslate(index, paragraph)}
-                        disabled={isTranslating}
-                        className={`flex-shrink-0 text-xs px-1 -mt-0.5 ${isDarkMode ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-400 hover:text-cyan-600'}`}
-                        title="翻译"
-                      >
-                        {isTranslating ? <RefreshCw size={10} className="animate-spin" /> : <span>译</span>}
-                      </button>
-                    ) : isCollapsed ? (
-                      <button
-                        onClick={() => handleTranslate(index, paragraph)}
-                        className="flex-shrink-0 text-xs text-cyan-600 px-1 -mt-0.5"
-                        title="查看翻译"
-                      >
-                        <span>译</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleTranslate(index, paragraph)}
-                        className="flex-shrink-0 text-xs text-cyan-600 font-medium px-1 -mt-0.5"
-                        title="收起翻译"
-                      >
-                        <span>译</span>
-                      </button>
-                    )}
+                  {/* 原文 */}
+                  <div className="whitespace-pre-wrap">
+                    {articleId && renderParagraphWithHighlights(paragraph, annotations, articleId, handleWordClick)}
                   </div>
                   
+                  {/* 翻译按钮 - 段落下方独立一行，空行不显示 */}
+                  {paragraph.trim() && (
+                    <div className="mt-1">
+                      {!hasTranslation ? (
+                        <button
+                          onClick={() => handleTranslate(index, paragraph)}
+                          disabled={isTranslating}
+                          className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                            isDarkMode 
+                              ? 'text-gray-500 hover:text-cyan-400 hover:bg-gray-800' 
+                              : 'text-gray-400 hover:text-cyan-600 hover:bg-gray-100'
+                          }`}
+                          title="翻译整段"
+                        >
+                          {isTranslating ? <RefreshCw size={10} className="animate-spin inline" /> : <span>译</span>}
+                        </button>
+                      ) : isCollapsed ? (
+                        <button
+                          onClick={() => handleTranslate(index, paragraph)}
+                          className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                            isDarkMode 
+                              ? 'text-cyan-400 hover:bg-gray-800' 
+                              : 'text-cyan-600 hover:bg-gray-100'
+                          }`}
+                          title="查看翻译"
+                        >
+                          <span>译</span>
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
+
                   {/* 翻译内容 */}
                   {showTranslation && translation && (
-                    <div className={`mt-3 p-4 rounded-lg border-l-4 border-cyan-400 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mt-2 p-4 rounded-lg border-l-4 border-cyan-400 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-cyan-600">中文翻译</span>
                         <button
