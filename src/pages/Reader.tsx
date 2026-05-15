@@ -315,41 +315,42 @@ export default function Reader() {
       <header className={`sticky top-0 z-30 backdrop-blur border-b transition-colors ${isDarkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'}`}>
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
               >
                 <ArrowLeft size={20} />
               </button>
-              <h1 className="text-lg font-medium text-gray-900 truncate max-w-[200px] sm:max-w-[300px]">
+              <h1 className={`text-base font-medium truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                 {article.title}
               </h1>
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
+              {/* 桌面端字号控制 */}
               <button
                 onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                className="p-2.5 hover:bg-gray-100 rounded-lg"
+                className={`p-2 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
                 title="减小字号"
               >
                 <ZoomOut size={18} />
               </button>
-              <span className="text-sm text-gray-600 w-12 text-center hidden sm:inline">{fontSize}px</span>
+              <span className={`text-sm w-12 text-center hidden sm:inline ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{fontSize}px</span>
               <button
                 onClick={() => setFontSize(Math.min(24, fontSize + 2))}
-                className="p-2.5 hover:bg-gray-100 rounded-lg"
+                className={`p-2 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
                 title="增大字号"
               >
                 <ZoomIn size={18} />
               </button>
               
-              <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+              <div className={`w-px h-6 mx-1 hidden sm:block ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`} />
               
               {isEditMode && (
                 <button
                   onClick={() => setIsEditMode(false)}
-                  className={`p-2.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                  className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isDarkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
                   title="取消编辑"
                 >
                   <X size={18} />
@@ -358,7 +359,7 @@ export default function Reader() {
               
               <button
                 onClick={() => isEditMode ? handleSaveEdit() : setIsEditMode(true)}
-                className={`p-2.5 rounded-lg transition-colors ${
+                className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
                   isEditMode 
                     ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-600' 
                     : isDarkMode 
@@ -372,7 +373,7 @@ export default function Reader() {
               
               <button
                 onClick={toggleDarkMode}
-                className={`p-2.5 rounded-lg transition-colors ${isDarkMode ? 'text-yellow-400 hover:bg-gray-800' : 'hover:bg-gray-100 text-gray-600'}`}
+                className={`p-2 rounded-lg transition-colors flex-shrink-0 ${isDarkMode ? 'text-yellow-400 hover:bg-gray-800' : 'hover:bg-gray-100 text-gray-600'}`}
                 title={isDarkMode ? '日间模式' : '夜间模式'}
               >
                 {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -380,14 +381,14 @@ export default function Reader() {
 
               <button
                 onClick={() => setShowSettings(true)}
-                className={`p-2.5 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+                className={`p-2 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
               >
                 <Settings size={18} />
               </button>
               
               <a
                 href="/wordbook"
-                className="p-2.5 hover:bg-gray-100 rounded-lg"
+                className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
                 title="单词本"
               >
                 <BookMarked size={18} />
