@@ -38,8 +38,38 @@ export default function Home() {
         localDB.articles.getAll(),
         localDB.folders.getAll(),
       ])
+      
+      // 如果没有文件夹，创建系统文件夹
+      if (foldersData.length === 0) {
+        const systemFolders: FolderType[] = [
+          {
+            id: crypto.randomUUID(),
+            name: '书架',
+            parent_id: null,
+            sort_order: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            isSystem: true,
+          },
+          {
+            id: crypto.randomUUID(),
+            name: '缓存',
+            parent_id: null,
+            sort_order: 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            isSystem: true,
+          },
+        ]
+        for (const folder of systemFolders) {
+          await localDB.folders.set(folder)
+        }
+        setFolders(systemFolders)
+      } else {
+        setFolders(foldersData)
+      }
+      
       setArticles(articlesData)
-      setFolders(foldersData)
     } catch (error) {
       console.error('Failed to load data:', error)
     }
@@ -177,6 +207,11 @@ export default function Home() {
 
   // 删除文件夹
   const handleDeleteFolder = async (id: string) => {
+    const folder = folders.find(f => f.id === id)
+    if (folder?.isSystem) {
+      alert('系统文件夹不能删除')
+      return
+    }
     if (!confirm('确定要删除这个文件夹吗？文件夹内的文章将移到根目录。')) return
     
     // 将文件夹内的文章移到根目录
@@ -218,12 +253,20 @@ export default function Home() {
 
   // 编辑文件夹
   const handleEditFolder = (folder: FolderType) => {
+    if (folder.isSystem) {
+      alert('系统文件夹不能重命名')
+      return
+    }
     setEditingFolder(folder)
     setEditFolderName(folder.name)
   }
 
   const handleSaveFolderEdit = async () => {
     if (!editingFolder || !editFolderName.trim()) return
+    if (editingFolder.isSystem) {
+      alert('系统文件夹不能重命名')
+      return
+    }
     const updated = { ...editingFolder, name: editFolderName.trim() }
     await localDB.folders.set(updated)
     const updatedFolders = folders.map(f => f.id === updated.id ? updated : f)
@@ -234,6 +277,10 @@ export default function Home() {
 
   // 移动文件夹
   const handleMoveFolder = (folder: FolderType) => {
+    if (folder.isSystem) {
+      alert('系统文件夹不能移动')
+      return
+    }
     setMovingFolder(folder)
   }
 
@@ -290,11 +337,9 @@ export default function Home() {
 
   return (
     <div className="flex flex-col md:flex-row md:gap-6">
-      {/* 侧边栏 - 书架 */}
+      {/* 侧边栏 */}
       <div className="hidden md:block w-64 flex-shrink-0">
         <div className={`rounded-lg shadow-sm border p-4 transition-colors ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <h2 className={`font-semibold mb-3 transition-colors ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>书架</h2>
-
           {/* 文件夹树状列表 */}
           <div className="space-y-1">
             {getFolderTree(null).map(folder => (
@@ -704,15 +749,14 @@ function MobileBookshelf({
 
   return (
     <div className="md:hidden mb-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* 书架标题 - 点击展开/折叠 */}
+      {/* 文件夹标题 - 点击展开/折叠 */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center justify-between w-full px-4 py-3 text-left"
       >
         <div className="flex items-center gap-2">
           <Folder size={18} className="text-cyan-600" />
-          <span className="font-medium text-gray-900 dark:text-gray-100">书架</span>
-          <span className="text-xs text-gray-400">({articles.length})</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">文件夹 ({articles.length})</span>
         </div>
         {isExpanded ? <ChevronDown size={18} className="text-gray-400" /> : <ChevronRight size={18} className="text-gray-400" />}
       </button>
@@ -823,17 +867,19 @@ function MobileFolderItem({
         >
           {folder.name}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirm(`确定删除文件夹「${folder.name}」吗？`)) {
-              onDelete(folder.id)
-            }
-          }}
-          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
-        >
-          <Trash2 size={14} />
-        </button>
+        {!folder.isSystem && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (confirm(`确定删除文件夹「${folder.name}」吗？`)) {
+                onDelete(folder.id)
+              }
+            }}
+            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
       </div>
 
       {/* 子文件夹 */}
@@ -922,63 +968,65 @@ function FolderItem({
         <Folder size={16} />
         <span className={`text-sm flex-1 truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{folder.name}</span>
         
-        {/* 三个小点菜单 */}
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowMenu(!showMenu)
-            }}
-            className={`p-1 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity ${
-              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-            }`}
-          >
-            <MoreVertical size={14} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
-          </button>
-          {showMenu && (
-            <div className={`absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-10 min-w-[100px] ${
-              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit(folder)
-                  setShowMenu(false)
-                }}
-                className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
-                  isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Edit3 size={12} />
-                编辑
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMove(folder)
-                  setShowMenu(false)
-                }}
-                className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
-                  isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Move size={12} />
-                移动
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete(folder.id)
-                  setShowMenu(false)
-                }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <Trash2 size={12} />
-                删除
-              </button>
-            </div>
-          )}
-        </div>
+        {/* 三个小点菜单 - 系统文件夹不显示 */}
+        {!folder.isSystem && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMenu(!showMenu)
+              }}
+              className={`p-1 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity ${
+                isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+              }`}
+            >
+              <MoreVertical size={14} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+            </button>
+            {showMenu && (
+              <div className={`absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-10 min-w-[100px] ${
+                isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit(folder)
+                    setShowMenu(false)
+                  }}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                    isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Edit3 size={12} />
+                  编辑
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMove(folder)
+                    setShowMenu(false)
+                  }}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                    isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Move size={12} />
+                  移动
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(folder.id)
+                    setShowMenu(false)
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 size={12} />
+                  删除
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {isExpanded && children.map(child => (
         <FolderItem

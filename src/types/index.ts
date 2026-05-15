@@ -31,6 +31,7 @@ export interface Folder {
   article_count?: number;
   children?: Folder[];
   isExpanded?: boolean;
+  isSystem?: boolean; // 系统文件夹，不可删除/重命名
 }
 
 // 文章相关类型
