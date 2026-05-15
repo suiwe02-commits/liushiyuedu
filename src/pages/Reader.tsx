@@ -445,7 +445,7 @@ export default function Reader() {
                 <div key={index} className="mb-1 relative group">
                   {/* 原文 */}
                   <div className="whitespace-pre-wrap">
-                    {articleId && renderParagraphWithHighlights(paragraph, annotations, articleId, handleWordClick)}
+                    {articleId && renderParagraphWithHighlights(paragraph, annotations, articleId, handleWordClick, isDarkMode)}
                   </div>
                   
                   {/* 翻译按钮 - 段落下方独立一行，空行不显示 */}
@@ -633,7 +633,7 @@ function WordTooltip({
 
 // 渲染带标注的段落
 function renderParagraphWithHighlights(
-  paragraph: string, annotations: Annotation[], articleId: string, onWordClick: (word: string, annotation: Annotation) => void
+  paragraph: string, annotations: Annotation[], articleId: string, onWordClick: (word: string, annotation: Annotation) => void, isDarkMode?: boolean
 ) {
   const words = paragraph.toLowerCase().match(/\b[a-z]+\b/g) || []
   const uniqueWords = [...new Set(words)]
