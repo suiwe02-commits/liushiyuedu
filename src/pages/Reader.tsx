@@ -7,6 +7,7 @@ import { useWordbookStore } from '@/stores/wordbookStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAuthStore } from '@/stores/authStore'
 import { localDB } from '@/services/localDB'
+import { syncToCloud } from '@/services/cloudSync'
 import { lookupWord } from '@/api/dictionary'
 import { translateText } from '@/api/translation'
 import { checkWordbookQuota } from '@/utils/quota'
@@ -198,6 +199,8 @@ export default function Reader() {
     }
     addAnnotation(newAnnotation)
     await localDB.annotations.set(newAnnotation)
+    // 同步到云端
+    await syncToCloud('annotations', newAnnotation)
     
     const wordbookEntry: WordbookEntry = {
       id: crypto.randomUUID(),
@@ -212,6 +215,8 @@ export default function Reader() {
     }
     addWordbookEntry(wordbookEntry)
     await localDB.wordbook.set(wordbookEntry)
+    // 同步到云端
+    await syncToCloud('wordbook', wordbookEntry)
     
     setShowWordTooltip(false)
     setSelectedWord(null)

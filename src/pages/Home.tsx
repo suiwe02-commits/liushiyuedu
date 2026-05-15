@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderPlus, FilePlus, Upload, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
+import { FolderPlus, FilePlus, Upload, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move, RefreshCw } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { useAuthStore } from '@/stores/authStore'
 import { localDB } from '@/services/localDB'
 import { checkCacheQuota } from '@/utils/quota'
+import { syncToCloud, fullSync } from '@/services/cloudSync'
 import { Folder as FolderType, Article } from '@/types'
 import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
@@ -109,6 +110,8 @@ export default function Home() {
 
     await localDB.folders.set(newFolder)
     addFolder(newFolder)
+    // 同步到云端
+    await syncToCloud('folders', newFolder)
     setNewFolderName('')
     setShowNewFolderModal(false)
   }
@@ -142,6 +145,8 @@ export default function Home() {
 
     await localDB.articles.set(newArticle)
     addArticle(newArticle)
+    // 同步到云端
+    await syncToCloud('articles', newArticle)
     setNewArticleContent('')
     setShowNewArticleModal(false)
   }
@@ -230,6 +235,8 @@ export default function Home() {
 
     await localDB.articles.set(newArticle)
     addArticle(newArticle)
+    // 同步到云端
+    await syncToCloud('articles', newArticle)
     setShowImportModal(false)
     e.target.value = ''
   }
@@ -239,6 +246,8 @@ export default function Home() {
     if (!confirm('确定要删除这篇文章吗？')) return
     await localDB.articles.remove(id)
     removeArticle(id)
+    // 同步到云端
+    await syncToCloud('articles', { id }, 'delete')
   }
 
   // 删除文件夹
@@ -257,6 +266,8 @@ export default function Home() {
       await localDB.articles.set(updated)
       removeArticle(article.id)
       addArticle(updated)
+      // 同步到云端
+      await syncToCloud('articles', updated)
     }
     
     // 删除子文件夹
@@ -267,6 +278,8 @@ export default function Home() {
     
     await localDB.folders.remove(id)
     removeFolder(id)
+    // 同步到云端
+    await syncToCloud('folders', { id }, 'delete')
   }
 
   // 切换文件夹展开
@@ -422,6 +435,24 @@ export default function Home() {
             <FilePlus size={16} />
             <span>新增文章</span>
           </button>
+
+          {/* 同步按钮 - 仅登录用户显示 */}
+          {isAuthenticated && (
+            <button
+              onClick={async () => {
+                const result = await fullSync()
+                alert(result.message)
+              }}
+              className={`flex items-center gap-2 w-full px-2 py-2 mt-1 text-sm rounded-lg transition-colors ${
+                isDarkMode 
+                  ? 'text-gray-400 hover:text-cyan-400 hover:bg-gray-700' 
+                  : 'text-gray-500 hover:text-cyan-600 hover:bg-cyan-50'
+              }`}
+            >
+              <RefreshCw size={16} />
+              <span>同步数据</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { supabase } from '@/api/supabase'
-import { localDB } from '@/services/localDB'
+import { fullSync } from '@/services/cloudSync'
 import Button from '@/components/common/Button'
 
 export default function Login() {
@@ -43,8 +43,9 @@ export default function Login() {
           is_active: true,
         })
         
-        // 从云端同步数据
-        await syncDataFromCloud()
+        // 全量同步（上传本地数据 + 下载云端数据）
+        const syncResult = await fullSync()
+        console.log('Sync result:', syncResult)
         
         navigate('/')
       }
@@ -54,54 +55,6 @@ export default function Login() {
     }
 
     setIsLoading(false)
-  }
-
-  // 从云端同步数据
-  const syncDataFromCloud = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // 获取云端数据
-      const [folders, articles, annotations, translations, wordbook] = await Promise.all([
-        supabase.from('folders').select('*').eq('user_id', user.id),
-        supabase.from('articles').select('*').eq('user_id', user.id),
-        supabase.from('annotations').select('*').eq('user_id', user.id),
-        supabase.from('translations').select('*').eq('user_id', user.id),
-        supabase.from('wordbook').select('*').eq('user_id', user.id),
-      ])
-
-      // 同步到本地
-      if (folders.data) {
-        for (const folder of folders.data) {
-          await localDB.folders.set(folder)
-        }
-      }
-      if (articles.data) {
-        for (const article of articles.data) {
-          await localDB.articles.set(article)
-        }
-      }
-      if (annotations.data) {
-        for (const annotation of annotations.data) {
-          await localDB.annotations.set(annotation)
-        }
-      }
-      if (translations.data) {
-        for (const translation of translations.data) {
-          await localDB.translations.set(translation)
-        }
-      }
-      if (wordbook.data) {
-        for (const entry of wordbook.data) {
-          await localDB.wordbook.set(entry)
-        }
-      }
-
-      console.log('Data synced from cloud')
-    } catch (error) {
-      console.error('Sync error:', error)
-    }
   }
 
   // 发送密码重置邮件
