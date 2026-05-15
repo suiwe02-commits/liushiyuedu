@@ -209,6 +209,59 @@ export default function Home() {
     setExpandedFolders(newExpanded)
   }
 
+  // 文件夹编辑状态
+  const [editingFolder, setEditingFolder] = useState<FolderType | null>(null)
+  const [editFolderName, setEditFolderName] = useState('')
+
+  // 文件夹移动状态
+  const [movingFolder, setMovingFolder] = useState<FolderType | null>(null)
+
+  // 编辑文件夹
+  const handleEditFolder = (folder: FolderType) => {
+    setEditingFolder(folder)
+    setEditFolderName(folder.name)
+  }
+
+  const handleSaveFolderEdit = async () => {
+    if (!editingFolder || !editFolderName.trim()) return
+    const updated = { ...editingFolder, name: editFolderName.trim() }
+    await localDB.folders.set(updated)
+    const updatedFolders = folders.map(f => f.id === updated.id ? updated : f)
+    setFolders(updatedFolders)
+    setEditingFolder(null)
+    setEditFolderName('')
+  }
+
+  // 移动文件夹
+  const handleMoveFolder = (folder: FolderType) => {
+    setMovingFolder(folder)
+  }
+
+  const handleMoveFolderTo = async (targetParentId: string | null) => {
+    if (!movingFolder) return
+    if (targetParentId === movingFolder.id) {
+      setMovingFolder(null)
+      return
+    }
+    // 检查是否是子文件夹
+    const isDescendant = (parentId: string | null): boolean => {
+      if (!parentId) return false
+      if (parentId === movingFolder!.id) return true
+      const parent = folders.find(f => f.id === parentId)
+      return parent ? isDescendant(parent.parent_id) : false
+    }
+    if (isDescendant(targetParentId)) {
+      alert('不能移动到自己的子文件夹中')
+      setMovingFolder(null)
+      return
+    }
+    const updated = { ...movingFolder, parent_id: targetParentId }
+    await localDB.folders.set(updated)
+    const updatedFolders = folders.map(f => f.id === updated.id ? updated : f)
+    setFolders(updatedFolders)
+    setMovingFolder(null)
+  }
+
   // 获取文件夹树
   const getFolderTree = (parentId: string | null): FolderType[] => {
     return folders
@@ -254,8 +307,11 @@ export default function Home() {
                 expandedFolders={expandedFolders}
                 onToggle={toggleFolder}
                 onDelete={handleDeleteFolder}
+                onEdit={handleEditFolder}
+                onMove={handleMoveFolder}
                 getFolderTree={getFolderTree}
                 articles={articles}
+                isDarkMode={isDarkMode}
               />
             ))}
           </div>
@@ -515,6 +571,109 @@ export default function Home() {
           </Button>
         </div>
       </Modal>
+
+      {/* 编辑文件夹名称弹窗 */}
+      <Modal
+        isOpen={!!editingFolder}
+        onClose={() => setEditingFolder(null)}
+        title="编辑文件夹名称"
+      >
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={editFolderName}
+            onChange={(e) => setEditFolderName(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+              isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200'
+            }`}
+            placeholder="文件夹名称"
+            onKeyDown={(e) => e.key === 'Enter' && handleSaveFolderEdit()}
+          />
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setEditingFolder(null)}
+            >
+              取消
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSaveFolderEdit}
+              disabled={!editFolderName.trim()}
+            >
+              保存
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 移动文件夹弹窗 */}
+      <Modal
+        isOpen={!!movingFolder}
+        onClose={() => setMovingFolder(null)}
+        title={`移动文件夹：${movingFolder?.name}`}
+      >
+        <div className="space-y-3">
+          <p className={`text-sm mb-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>选择目标位置：</p>
+          
+          {/* 根目录选项 */}
+          <button
+            onClick={() => handleMoveFolderTo(null)}
+            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+              movingFolder?.parent_id === null 
+                ? (isDarkMode ? 'bg-cyan-900/30 text-cyan-400' : 'bg-cyan-50 text-cyan-600')
+                : (isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Folder size={16} />
+              <span>根目录</span>
+            </div>
+          </button>
+          
+          {/* 文件夹列表（排除自己和子文件夹） */}
+          <div className="max-h-60 overflow-y-auto space-y-1">
+            {folders
+              .filter(f => f.id !== movingFolder?.id)
+              .map(folder => {
+                // 检查是否是移动文件夹的子文件夹
+                const isDescendant = (parentId: string | null): boolean => {
+                  if (!parentId) return false
+                  if (parentId === movingFolder!.id) return true
+                  const parent = folders.find(f => f.id === parentId)
+                  return parent ? isDescendant(parent.parent_id) : false
+                }
+                if (isDescendant(folder.id)) return null
+                
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleMoveFolderTo(folder.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      movingFolder?.parent_id === folder.id 
+                        ? (isDarkMode ? 'bg-cyan-900/30 text-cyan-400' : 'bg-cyan-50 text-cyan-600')
+                        : (isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100')
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Folder size={16} />
+                      <span className={`truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{folder.name}</span>
+                    </div>
+                  </button>
+                )
+              })}
+          </div>
+          
+          <Button
+            variant="outline"
+            className="w-full mt-4"
+            onClick={() => setMovingFolder(null)}
+          >
+            取消
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -709,8 +868,11 @@ function FolderItem({
   expandedFolders,
   onToggle,
   onDelete,
+  onEdit,
+  onMove,
   getFolderTree,
   articles,
+  isDarkMode,
 }: {
   folder: FolderType
   level: number
@@ -719,22 +881,30 @@ function FolderItem({
   expandedFolders: Set<string>
   onToggle: (id: string) => void
   onDelete: (id: string) => void
+  onEdit: (folder: FolderType) => void
+  onMove: (folder: FolderType) => void
   getFolderTree: (parentId: string | null) => FolderType[]
   articles: Article[]
+  isDarkMode: boolean
 }) {
   const children = getFolderTree(folder.id)
   const hasChildren = children.length > 0
   const isExpanded = expandedFolders.has(folder.id)
+  const [showMenu, setShowMenu] = useState(false)
 
   return (
     <div>
       <div
         className={`
           flex items-center gap-1 px-2 py-1.5 rounded cursor-pointer group
-          ${selectedFolder === folder.id ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-gray-100'}
+          ${selectedFolder === folder.id 
+            ? (isDarkMode ? 'bg-cyan-900/30 text-cyan-400' : 'bg-cyan-50 text-cyan-600') 
+            : (isDarkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100')
+          }
         `}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => onSelect(folder.id)}
+        onMouseLeave={() => setShowMenu(false)}
       >
         {hasChildren ? (
           <button
@@ -742,7 +912,7 @@ function FolderItem({
               e.stopPropagation()
               onToggle(folder.id)
             }}
-            className="p-0.5 hover:bg-gray-200 rounded"
+            className={`p-0.5 rounded ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
           >
             {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
@@ -750,17 +920,65 @@ function FolderItem({
           <span className="w-5" />
         )}
         <Folder size={16} />
-        <span className="text-sm flex-1 truncate">{folder.name}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(folder.id)
-          }}
-          className="p-1 hover:bg-red-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-          title="删除文件夹"
-        >
-          <Trash2 size={12} className="text-red-500" />
-        </button>
+        <span className={`text-sm flex-1 truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{folder.name}</span>
+        
+        {/* 三个小点菜单 */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
+            className={`p-1 rounded md:opacity-0 md:group-hover:opacity-100 transition-opacity ${
+              isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+            }`}
+          >
+            <MoreVertical size={14} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
+          </button>
+          {showMenu && (
+            <div className={`absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-10 min-w-[100px] ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            }`}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(folder)
+                  setShowMenu(false)
+                }}
+                className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                  isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Edit3 size={12} />
+                编辑
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onMove(folder)
+                  setShowMenu(false)
+                }}
+                className={`flex items-center gap-2 w-full px-3 py-2 text-sm ${
+                  isDarkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Move size={12} />
+                移动
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(folder.id)
+                  setShowMenu(false)
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Trash2 size={12} />
+                删除
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {isExpanded && children.map(child => (
         <FolderItem
@@ -772,8 +990,11 @@ function FolderItem({
           expandedFolders={expandedFolders}
           onToggle={onToggle}
           onDelete={onDelete}
+          onEdit={onEdit}
+          onMove={onMove}
           getFolderTree={getFolderTree}
           articles={articles}
+          isDarkMode={isDarkMode}
         />
       ))}
     </div>
