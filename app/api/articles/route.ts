@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-// GET /api/articles - 获取所有文章
+// GET /api/articles
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -24,7 +24,7 @@ export async function GET() {
   }
 }
 
-// POST /api/articles - 创建文章
+// POST /api/articles
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -35,12 +35,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { title, content, folderId } = body
 
-    const wordCount = content.split(/\s+/).filter((w: string) => w).length
+    if (!content || typeof content !== "string" || !content.trim()) {
+      return NextResponse.json({ error: "Content is required" }, { status: 400 })
+    }
+
+    const wordCount = content.length
 
     const article = await prisma.article.create({
       data: {
-        title: title || "无标题",
-        content,
+        title: (title || content.trim().substring(0, 50) || "无标题").trim(),
+        content: content.trim(),
         wordCount,
         userId: session.user.id,
         folderId: folderId || null,
