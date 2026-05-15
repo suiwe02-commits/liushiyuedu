@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { FolderPlus, FilePlus, Upload, ChevronRight, ChevronDown, MoreVertical, Trash2, Folder, Edit3, Move } from 'lucide-react'
 import { useArticleStore } from '@/stores/articleStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { localDB } from '@/services/localDB'
+import { checkCacheQuota } from '@/utils/quota'
 import { Folder as FolderType, Article } from '@/types'
 import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Home() {
   const { isDarkMode } = useThemeStore()
+  const { isAuthenticated } = useAuthStore()
   const { articles, folders, setArticles, setFolders, addArticle, removeArticle, addFolder, removeFolder, updateArticle } = useArticleStore()
   
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null)
@@ -99,6 +102,14 @@ export default function Home() {
   const handleCreateArticle = async () => {
     if (!newArticleContent.trim()) return
 
+    // 检查缓存容量
+    const quota = await checkCacheQuota(isAuthenticated)
+    const newArticleSize = newArticleContent.length * 2
+    if (quota.current + newArticleSize > quota.limitMB * 1024 * 1024) {
+      alert(quota.message)
+      return
+    }
+
     const lines = newArticleContent.trim().split('\n')
     const title = lines[0].substring(0, 50) || '无标题'
     const content = newArticleContent.trim()
@@ -179,6 +190,16 @@ export default function Home() {
     if (!file) return
 
     const content = await file.text()
+
+    // 检查缓存容量
+    const quota = await checkCacheQuota(isAuthenticated)
+    const newArticleSize = content.length * 2
+    if (quota.current + newArticleSize > quota.limitMB * 1024 * 1024) {
+      alert(quota.message)
+      e.target.value = ''
+      return
+    }
+
     const title = file.name.replace(/\.txt$/, '')
 
     const newArticle: Article = {
