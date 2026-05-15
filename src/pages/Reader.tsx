@@ -360,7 +360,7 @@ export default function Reader() {
                 onClick={() => isEditMode ? handleSaveEdit() : setIsEditMode(true)}
                 className={`p-2.5 rounded-lg transition-colors ${
                   isEditMode 
-                    ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400' 
+                    ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-600' 
                     : isDarkMode 
                       ? 'hover:bg-gray-800 text-gray-300' 
                       : 'hover:bg-gray-100 text-gray-600'
@@ -457,7 +457,7 @@ export default function Reader() {
                           disabled={isTranslating}
                           className={`text-xs px-2 py-0.5 rounded transition-colors ${
                             isDarkMode 
-                              ? 'text-gray-500 hover:text-cyan-400 hover:bg-gray-800' 
+                              ? 'text-gray-500 hover:text-cyan-600 hover:bg-gray-800' 
                               : 'text-gray-400 hover:text-cyan-600 hover:bg-gray-100'
                           }`}
                           title="翻译整段"
@@ -469,7 +469,7 @@ export default function Reader() {
                           onClick={() => handleTranslate(index, paragraph)}
                           className={`text-xs px-2 py-0.5 rounded transition-colors ${
                             isDarkMode 
-                              ? 'text-cyan-400 hover:bg-gray-800' 
+                              ? 'text-cyan-600 hover:bg-gray-800' 
                               : 'text-cyan-600 hover:bg-gray-100'
                           }`}
                           title="查看翻译"
@@ -482,9 +482,9 @@ export default function Reader() {
 
                   {/* 翻译内容 */}
                   {showTranslation && translation && (
-                    <div className={`mt-2 p-4 rounded-lg border-l-4 border-cyan-400 transition-colors ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mt-2 p-4 rounded-lg border-l-4 transition-colors ${isDarkMode ? 'bg-gray-800 border-cyan-700' : 'bg-gray-50 border-cyan-400'}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-cyan-600">中文翻译</span>
+                        <span className={`text-xs font-medium ${isDarkMode ? 'text-cyan-600' : 'text-cyan-600'}`}>中文翻译</span>
                         <button
                           onClick={() => handleTranslate(index, paragraph)}
                           className={`text-xs flex items-center gap-1 ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
@@ -495,7 +495,7 @@ export default function Reader() {
                           <span>收起</span>
                         </button>
                       </div>
-                      <p className={`leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{translation.translated_text}</p>
+                      <p className={`leading-relaxed ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>{translation.translated_text}</p>
                     </div>
                   )}
                 </div>
@@ -675,7 +675,7 @@ function renderParagraphWithHighlights(
       <span key={`${h.word}-${i}`} className="annotated-word cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onWordClick(h.word, h.annotation) }}>
         {paragraph.slice(h.start, h.end)}
-        <span className="text-cyan-400 text-sm">({h.translation})</span>
+        <span className={`text-sm ${isDarkMode ? 'text-cyan-600' : 'text-cyan-400'}`}>({h.translation})</span>
       </span>
     )
     lastIndex = h.end
