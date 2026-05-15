@@ -57,7 +57,9 @@ export const syncToCloud = async (
       const { error } = await supabase.from(table).delete().eq('id', id)
       if (error) throw error
     } else {
-      const { error } = await supabase.from(table).upsert(data as Record<string, unknown>)
+      // 添加 user_id 以通过 RLS 策略
+      const dataWithUser = { ...(data as Record<string, unknown>), user_id: session.user.id }
+      const { error } = await supabase.from(table).upsert(dataWithUser)
       if (error) throw error
     }
 
