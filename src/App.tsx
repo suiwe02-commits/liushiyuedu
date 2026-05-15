@@ -13,7 +13,7 @@ import { localDB } from '@/services/localDB'
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
-  const { setUser, setLoading } = useAuthStore()
+  const { initAuth, setLoading } = useAuthStore()
   const { isDarkMode } = useThemeStore()
 
   useEffect(() => {
@@ -21,6 +21,9 @@ function App() {
     const initApp = async () => {
       try {
         setLoading(true)
+        
+        // 恢复登录状态
+        await initAuth()
         
         // 尝试从localStorage恢复游客数据
         const localData = await localDB.folders.getAll()
@@ -35,7 +38,7 @@ function App() {
     }
 
     initApp()
-  }, [setUser, setLoading])
+  }, [initAuth, setLoading])
 
   // 应用夜间模式到 body
   useEffect(() => {
