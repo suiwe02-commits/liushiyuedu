@@ -5,15 +5,18 @@ import { useArticleStore } from '@/stores/articleStore'
 import { useAnnotationStore } from '@/stores/annotationStore'
 import { useWordbookStore } from '@/stores/wordbookStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { localDB } from '@/services/localDB'
 import { lookupWord } from '@/api/dictionary'
 import { translateText } from '@/api/translation'
+import { checkWordbookQuota } from '@/utils/quota'
 import { Article, Annotation, Translation, WordbookEntry, DictionaryResult } from '@/types'
 import Button from '@/components/common/Button'
 import Modal from '@/components/common/Modal'
 
 export default function Reader() {
   const { isDarkMode, toggleDarkMode } = useThemeStore()
+  const { isAuthenticated } = useAuthStore()
   const { articleId } = useParams<{ articleId: string }>()
   const navigate = useNavigate()
   const contentRef = useRef<HTMLDivElement>(null)
@@ -175,6 +178,14 @@ export default function Reader() {
 
   const handleSelectTranslation = async (translation: string, phonetic: string) => {
     if (!article || !selectedWord) return
+    
+    // 检查单词本容量
+    const quota = await checkWordbookQuota(isAuthenticated)
+    if (quota.isOverLimit) {
+      alert(quota.message)
+      return
+    }
+    
     const newAnnotation: Annotation = {
       id: crypto.randomUUID(),
       article_id: article.id,
