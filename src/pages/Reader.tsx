@@ -424,8 +424,8 @@ export default function Reader() {
         ) : (
           <article
             ref={contentRef}
-            className={`prose prose-lg max-w-none ${isDarkMode ? 'prose-invert' : ''}`}
-            style={{ fontSize: `${fontSize}px`, lineHeight }}
+            className="prose prose-lg max-w-none"
+            style={{ fontSize: `${fontSize}px`, lineHeight, color: isDarkMode ? '#9ca3af' : '#4b5563' }}
             onMouseUp={handleTextSelect}
             onTouchEnd={() => {
               // 移动端选词：等待选区完成
