@@ -516,6 +516,7 @@ export default function Reader() {
           onSelect={handleSelectTranslation}
           onMastered={handleMastered}
           onClose={() => setShowWordTooltip(false)}
+          isDarkMode={isDarkMode}
         />
       )}
 
@@ -543,7 +544,7 @@ export default function Reader() {
 
 // 单词查询浮层组件
 function WordTooltip({
-  word, result, existingAnnotation, isLoading, position, onSelect, onMastered, onClose
+  word, result, existingAnnotation, isLoading, position, onSelect, onMastered, onClose, isDarkMode
 }: {
   word: string
   result: DictionaryResult | null
@@ -553,6 +554,7 @@ function WordTooltip({
   onSelect: (translation: string, phonetic: string) => void
   onMastered: () => void
   onClose: () => void
+  isDarkMode: boolean
 }) {
   const tooltipRef = useRef<HTMLDivElement>(null)
   
@@ -579,26 +581,35 @@ function WordTooltip({
   }
   
   return (
-    <div ref={tooltipRef} className="annotation-tooltip w-80 max-w-[calc(100vw-2rem)] bg-white shadow-xl border border-gray-200 rounded-lg p-4 z-50" style={style}>
+    <div 
+      ref={tooltipRef} 
+      className={`w-80 max-w-[calc(100vw-2rem)] shadow-xl border rounded-lg p-4 z-50 transition-colors ${
+        isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`} 
+      style={style}
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h4 className="text-lg font-semibold text-gray-900">{word}</h4>
-          {result?.phonetic && <p className="text-sm text-gray-500">{result.phonetic}</p>}
+          <h4 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>{word}</h4>
+          {result?.phonetic && <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{result.phonetic}</p>}
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">×</button>
+        <button 
+          onClick={onClose} 
+          className={`p-1 rounded ${isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+        >×</button>
       </div>
       
       {isLoading ? (
         <div className="py-4 text-center">
           <div className="loading-spinner mx-auto" />
-          <p className="text-sm text-gray-500 mt-2">查询中...</p>
+          <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>查询中...</p>
         </div>
       ) : existingAnnotation ? (
         // 已标注单词 - 显示"学会了"选项
         <div className="space-y-3">
-          <div className="p-3 bg-cyan-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">当前释义</p>
-            <p className="text-cyan-600 font-medium">{existingAnnotation.translation}</p>
+          <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-cyan-50'}`}>
+            <p className={`text-sm mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>当前释义</p>
+            <p className={`font-medium ${isDarkMode ? 'text-cyan-400' : 'text-cyan-600'}`}>{existingAnnotation.translation}</p>
           </div>
           <button
             onClick={onMastered}
@@ -613,11 +624,20 @@ function WordTooltip({
         <div className="space-y-3">
           {result.meanings.map((meaning, i) => (
             <div key={i}>
-              <span className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-cyan-700 rounded mb-1">{meaning.partOfSpeech}</span>
+              <span className={`inline-block px-2 py-0.5 text-xs rounded mb-1 ${
+                isDarkMode ? 'bg-blue-900/50 text-cyan-400' : 'bg-blue-100 text-cyan-700'
+              }`}>{meaning.partOfSpeech}</span>
               <ul className="space-y-1">
                 {meaning.definitions.slice(0, 3).map((def, j) => (
-                  <li key={j} onClick={() => onSelect(def.definition, result.phonetic || '')}
-                    className="text-sm text-gray-700 cursor-pointer hover:bg-cyan-50 px-2 py-1 rounded">
+                  <li 
+                    key={j} 
+                    onClick={() => onSelect(def.definition, result.phonetic || '')}
+                    className={`text-sm cursor-pointer px-2 py-1 rounded transition-colors ${
+                      isDarkMode 
+                        ? 'text-gray-300 hover:bg-gray-700' 
+                        : 'text-gray-700 hover:bg-cyan-50'
+                    }`}
+                  >
                     {def.definition}
                   </li>
                 ))}
@@ -626,7 +646,7 @@ function WordTooltip({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500 text-center py-4">未找到释义，请尝试其他单词</p>
+        <p className={`text-sm text-center py-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>未找到释义，请尝试其他单词</p>
       )}
     </div>
   )
