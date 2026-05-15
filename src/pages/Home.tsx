@@ -245,8 +245,8 @@ export default function Home() {
     }
     // 检查是否是子文件夹
     const isDescendant = (parentId: string | null): boolean => {
-      if (!parentId) return false
-      if (parentId === movingFolder!.id) return true
+      if (!parentId || !movingFolder) return false
+      if (parentId === movingFolder.id) return true
       const parent = folders.find(f => f.id === parentId)
       return parent ? isDescendant(parent.parent_id) : false
     }
@@ -639,8 +639,8 @@ export default function Home() {
               .map(folder => {
                 // 检查是否是移动文件夹的子文件夹
                 const isDescendant = (parentId: string | null): boolean => {
-                  if (!parentId) return false
-                  if (parentId === movingFolder!.id) return true
+                  if (!parentId || !movingFolder) return false
+                  if (parentId === movingFolder.id) return true
                   const parent = folders.find(f => f.id === parentId)
                   return parent ? isDescendant(parent.parent_id) : false
                 }
