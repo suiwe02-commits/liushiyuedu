@@ -346,17 +346,33 @@ export default function Reader() {
               
               <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
               
+              {isEditMode && (
+                <button
+                  onClick={() => setIsEditMode(false)}
+                  className={`p-2.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                  title="取消编辑"
+                >
+                  <X size={18} />
+                </button>
+              )}
+              
               <button
-                onClick={() => isEditMode ? setIsEditMode(false) : setIsEditMode(true)}
-                className={`p-2.5 rounded-lg transition-colors hidden sm:block ${isEditMode ? 'bg-blue-100 text-cyan-600' : 'hover:bg-gray-100'}`}
-                title={isEditMode ? '退出编辑' : '编辑文章'}
+                onClick={() => isEditMode ? handleSaveEdit() : setIsEditMode(true)}
+                className={`p-2.5 rounded-lg transition-colors ${
+                  isEditMode 
+                    ? 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400' 
+                    : isDarkMode 
+                      ? 'hover:bg-gray-800 text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                title={isEditMode ? '保存编辑' : '编辑文章'}
               >
                 {isEditMode ? <Check size={18} /> : <Edit3 size={18} />}
               </button>
               
               <button
                 onClick={() => setShowSettings(true)}
-                className="p-2.5 hover:bg-gray-100 rounded-lg hidden sm:block"
+                className={`p-2.5 rounded-lg hidden sm:block ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
               >
                 <Settings size={18} />
               </button>
@@ -379,7 +395,11 @@ export default function Reader() {
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full h-[calc(100vh-200px)] px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none font-mono text-sm"
+              className={`w-full h-[calc(100vh-200px)] px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none font-mono text-sm transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-500' 
+                  : 'bg-white border-gray-200 text-gray-800 placeholder-gray-400'
+              }`}
               placeholder="编辑文章内容..."
             />
             <div className="flex gap-3">
