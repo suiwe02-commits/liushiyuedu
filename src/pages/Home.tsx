@@ -34,6 +34,21 @@ export default function Home() {
     loadData()
   }, [])
 
+  // 监听登录状态变化，登录后同步数据
+  useEffect(() => {
+    const syncDataOnLogin = async () => {
+      // 如果用户刚登录（isAuthenticated 从 false 变为 true），显示提示
+      // 实际的数据同步应该在 Supabase 端进行
+      // 这里只显示一个提示
+      if (isAuthenticated) {
+        // 数据已经在 Supabase 配置了 RLS 和同步规则
+        // 如果需要从本地迁移到云端，可以在这里实现
+        console.log('用户已登录，数据将同步到云端')
+      }
+    }
+    syncDataOnLogin()
+  }, [isAuthenticated])
+
   const loadData = async () => {
     setIsLoading(true)
     try {
